@@ -18,6 +18,7 @@ export default function Panel({ params }) {
   const [loading, setLoading] = useState(true)
   const [modalCurso, setModalCurso] = useState(null)
   const [cursoAbierto, setCursoAbierto] = useState(null)
+  const [filtroDictante, setFiltroDictante] = useState('')
 
   if (secret !== SECRET) return notFound()
 
@@ -38,6 +39,13 @@ export default function Panel({ params }) {
     await supabase.from('cursos').delete().eq('id', id)
     cargarCursos()
   }
+
+  // Dictantes únicos para el filtro
+  const dictantes = [...new Set(cursos.map(c => c.dictante).filter(Boolean))].sort()
+
+  const cursosFiltrados = filtroDictante
+    ? cursos.filter(c => c.dictante === filtroDictante)
+    : cursos
 
   return (
     <div className="app">
@@ -64,26 +72,47 @@ export default function Panel({ params }) {
         </div>
 
         {tab === 'cursos' && (
-          loading ? (
-            <div className="empty-state">Cargando...</div>
-          ) : cursos.length === 0 ? (
-            <div className="empty-state">
-              <p>No hay cursos todavía.</p>
-              <button className="btn-primary" onClick={() => setModalCurso('nuevo')}>Crear el primero</button>
-            </div>
-          ) : (
-            <div className="grid">
-              {cursos.map(c => (
-                <CursoCard
-                  key={c.id}
-                  curso={c}
-                  onAbrir={() => setCursoAbierto(c)}
-                  onEditar={() => setModalCurso(c)}
-                  onEliminar={() => eliminarCurso(c.id)}
-                />
-              ))}
-            </div>
-          )
+          <>
+            {dictantes.length > 0 && (
+              <div className="filtro-dictante">
+                <button
+                  className={`btn-ghost btn-sm ${filtroDictante === '' ? 'active' : ''}`}
+                  onClick={() => setFiltroDictante('')}
+                >
+                  Todos
+                </button>
+                {dictantes.map(d => (
+                  <button
+                    key={d}
+                    className={`btn-ghost btn-sm ${filtroDictante === d ? 'active' : ''}`}
+                    onClick={() => setFiltroDictante(d)}
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
+            )}
+            {loading ? (
+              <div className="empty-state">Cargando...</div>
+            ) : cursosFiltrados.length === 0 ? (
+              <div className="empty-state">
+                <p>No hay cursos todavía.</p>
+                <button className="btn-primary" onClick={() => setModalCurso('nuevo')}>Crear el primero</button>
+              </div>
+            ) : (
+              <div className="grid">
+                {cursosFiltrados.map(c => (
+                  <CursoCard
+                    key={c.id}
+                    curso={c}
+                    onAbrir={() => setCursoAbierto(c)}
+                    onEditar={() => setModalCurso(c)}
+                    onEliminar={() => eliminarCurso(c.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {tab === 'inscriptos' && <TodosInscriptos />}

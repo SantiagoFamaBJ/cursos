@@ -14,7 +14,6 @@ export default function Ranking() {
         .select('nombre, dni, email, cursos(nombre)')
         .order('nombre', { ascending: true })
 
-      // Agrupar por nombre normalizado
       const map = {}
       ;(data || []).forEach(i => {
         const key = (i.nombre || '').toLowerCase().trim()
@@ -23,7 +22,6 @@ export default function Ranking() {
       })
 
       const lista = Object.values(map)
-        .filter(p => p.cursos.length > 1)
         .sort((a, b) => b.cursos.length - a.cursos.length)
 
       setRanking(lista)
@@ -33,29 +31,32 @@ export default function Ranking() {
   }, [])
 
   if (loading) return <div className="empty-state">Cargando...</div>
+  if (ranking.length === 0) return <div className="empty-state">No hay participantes todavía.</div>
 
-  if (ranking.length === 0) return (
-    <div className="empty-state">
-      <p>Todavía no hay participantes que hayan asistido a más de un curso.</p>
-    </div>
-  )
+  const total = ranking.length
 
   return (
-    <div className="ranking-list">
-      {ranking.map((p, idx) => (
-        <div key={idx} className="ranking-item">
-          <div className={`ranking-pos ${idx < 3 ? 'top' : ''}`}>{idx + 1}</div>
-          <div className="ranking-info">
-            <div className="ranking-nombre">{p.nombre}</div>
-            {p.dni && <div className="ranking-cursos-list">DNI {p.dni}</div>}
-            <div className="ranking-cursos-list">{p.cursos.join(' · ')}</div>
+    <div>
+      <p style={{color: 'var(--text-3)', fontSize: '13px', marginBottom: '20px'}}>
+        {total} participante{total !== 1 ? 's' : ''} únicos
+      </p>
+      <div className="ranking-list">
+        {ranking.map((p, idx) => (
+          <div key={idx} className="ranking-item">
+            <div className={`ranking-pos ${idx < 3 && p.cursos.length > 1 ? 'top' : ''}`}>{idx + 1}</div>
+            <div className="ranking-info">
+              <div className="ranking-nombre">{p.nombre}</div>
+              {p.dni && <div className="ranking-cursos-list">DNI {p.dni}</div>}
+              {p.email && <div className="ranking-cursos-list">{p.email}</div>}
+              <div className="ranking-cursos-list">{p.cursos.join(' · ')}</div>
+            </div>
+            <div style={{textAlign:'right'}}>
+              <div className="ranking-count">{p.cursos.length}</div>
+              <div className="ranking-count-label">curso{p.cursos.length !== 1 ? 's' : ''}</div>
+            </div>
           </div>
-          <div style={{textAlign:'right'}}>
-            <div className="ranking-count">{p.cursos.length}</div>
-            <div className="ranking-count-label">curso{p.cursos.length !== 1 ? 's' : ''}</div>
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   )
 }

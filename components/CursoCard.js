@@ -29,6 +29,11 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar }) {
     return `${d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })} — ${h.toLocaleDateString('es-AR', opts)}`
   }
 
+  function formatMonto(n) {
+    if (n >= 1000000) return `$${(n/1000000).toFixed(2).replace('.', ',')}M`
+    return `$${Math.round(n/1000)}k`
+  }
+
   // Financiero
   function calcFinanciero() {
     let total = 0
@@ -74,7 +79,7 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar }) {
           </div>
           <div className="card-stat">
             <span className="card-stat-value" style={{fontSize:'14px', paddingTop:'4px'}}>
-              {total > 0 ? `$${Math.round(total/1000)}k` : '—'}
+              {total > 0 ? formatMonto(total) : '—'}
             </span>
             <span className="card-stat-label">Recaudado</span>
             {total > 0 && <span className="card-stat-sub">ARS</span>}
