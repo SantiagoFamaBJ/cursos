@@ -6,11 +6,14 @@ import { supabase } from '@/lib/supabase'
 import CursoCard from '@/components/CursoCard'
 import ModalCurso from '@/components/ModalCurso'
 import DetalleCurso from '@/components/DetalleCurso'
+import TodosInscriptos from '@/components/TodosInscriptos'
+import Ranking from '@/components/Ranking'
 
 const SECRET = process.env.NEXT_PUBLIC_SECRET_PANEL_PATH
 
 export default function Panel({ params }) {
   const { secret } = use(params)
+  const [tab, setTab] = useState('cursos')
   const [cursos, setCursos] = useState([])
   const [loading, setLoading] = useState(true)
   const [modalCurso, setModalCurso] = useState(null)
@@ -18,15 +21,13 @@ export default function Panel({ params }) {
 
   if (secret !== SECRET) return notFound()
 
-  useEffect(() => {
-    cargarCursos()
-  }, [])
+  useEffect(() => { cargarCursos() }, [])
 
   async function cargarCursos() {
     setLoading(true)
     const { data } = await supabase
       .from('cursos')
-      .select('*, inscriptos(count)')
+      .select('*, inscriptos_data:inscriptos(*)')
       .order('fecha_desde', { ascending: false })
     setCursos(data || [])
     setLoading(false)
@@ -43,40 +44,50 @@ export default function Panel({ params }) {
       <header className="header">
         <div className="header-inner">
           <div className="logo">
-            <span className="logo-mark">✦</span>
-            Dental Medrano Training
-            <span className="logo-sep">—</span>
-            Cursos
+            <img src="/logo.png" alt="Dental Medrano Training" />
+            <span className="logo-sep">|</span>
+            <span className="logo-label">Cursos</span>
           </div>
-          <button className="btn-primary" onClick={() => setModalCurso('nuevo')}>
-            + Nuevo curso
-          </button>
+          {tab === 'cursos' && (
+            <button className="btn-primary" onClick={() => setModalCurso('nuevo')}>
+              + Nuevo curso
+            </button>
+          )}
         </div>
       </header>
 
       <main className="main">
-        {loading ? (
-          <div className="empty-state">Cargando...</div>
-        ) : cursos.length === 0 ? (
-          <div className="empty-state">
-            <p>No hay cursos todavía.</p>
-            <button className="btn-primary" onClick={() => setModalCurso('nuevo')}>
-              Crear el primero
-            </button>
-          </div>
-        ) : (
-          <div className="grid">
-            {cursos.map(c => (
-              <CursoCard
-                key={c.id}
-                curso={c}
-                onAbrir={() => setCursoAbierto(c)}
-                onEditar={() => setModalCurso(c)}
-                onEliminar={() => eliminarCurso(c.id)}
-              />
-            ))}
-          </div>
+        <div className="tabs">
+          <button className={`tab ${tab === 'cursos' ? 'active' : ''}`} onClick={() => setTab('cursos')}>Cursos</button>
+          <button className={`tab ${tab === 'inscriptos' ? 'active' : ''}`} onClick={() => setTab('inscriptos')}>Todos los inscriptos</button>
+          <button className={`tab ${tab === 'ranking' ? 'active' : ''}`} onClick={() => setTab('ranking')}>Ranking</button>
+        </div>
+
+        {tab === 'cursos' && (
+          loading ? (
+            <div className="empty-state">Cargando...</div>
+          ) : cursos.length === 0 ? (
+            <div className="empty-state">
+              <p>No hay cursos todavía.</p>
+              <button className="btn-primary" onClick={() => setModalCurso('nuevo')}>Crear el primero</button>
+            </div>
+          ) : (
+            <div className="grid">
+              {cursos.map(c => (
+                <CursoCard
+                  key={c.id}
+                  curso={c}
+                  onAbrir={() => setCursoAbierto(c)}
+                  onEditar={() => setModalCurso(c)}
+                  onEliminar={() => eliminarCurso(c.id)}
+                />
+              ))}
+            </div>
+          )
         )}
+
+        {tab === 'inscriptos' && <TodosInscriptos />}
+        {tab === 'ranking' && <Ranking />}
       </main>
 
       {modalCurso && (
@@ -90,7 +101,7 @@ export default function Panel({ params }) {
       {cursoAbierto && (
         <DetalleCurso
           curso={cursoAbierto}
-          onClose={() => setCursoAbierto(null)}
+          onClose={() => { setCursoAbierto(null); cargarCursos() }}
         />
       )}
     </div>

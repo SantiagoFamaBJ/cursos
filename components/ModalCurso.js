@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 export default function ModalCurso({ curso, onClose, onSave }) {
   const [form, setForm] = useState({
     nombre: curso?.nombre || '',
+    dictante: curso?.dictante || '',
     fecha_desde: curso?.fecha_desde || '',
     fecha_hasta: curso?.fecha_hasta || '',
     precio1_usd: curso?.precio1_usd || '',
@@ -14,7 +15,6 @@ export default function ModalCurso({ curso, onClose, onSave }) {
     precio1_ars: curso?.precio1_ars || '',
   })
   const [saving, setSaving] = useState(false)
-
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   async function guardar() {
@@ -22,6 +22,7 @@ export default function ModalCurso({ curso, onClose, onSave }) {
     setSaving(true)
     const payload = {
       nombre: form.nombre.trim(),
+      dictante: form.dictante.trim() || null,
       fecha_desde: form.fecha_desde || null,
       fecha_hasta: form.fecha_hasta || null,
       precio1_usd: form.precio1_usd || null,
@@ -50,6 +51,10 @@ export default function ModalCurso({ curso, onClose, onSave }) {
             <span>Nombre del curso</span>
             <input value={form.nombre} onChange={e => set('nombre', e.target.value)} placeholder="Ej: Implantología avanzada" />
           </label>
+          <label className="field">
+            <span>Dictante</span>
+            <input value={form.dictante} onChange={e => set('dictante', e.target.value)} placeholder="Ej: Dr. Sifontes" />
+          </label>
           <div className="field-row">
             <label className="field field-grow">
               <span>Fecha inicio</span>
@@ -60,7 +65,6 @@ export default function ModalCurso({ curso, onClose, onSave }) {
               <input type="date" value={form.fecha_hasta} onChange={e => set('fecha_hasta', e.target.value)} />
             </label>
           </div>
-
           <div className="section-label">Precios</div>
           <div className="field-row">
             <label className="field field-grow">
