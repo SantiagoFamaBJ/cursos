@@ -6,9 +6,12 @@ import { supabase } from '@/lib/supabase'
 export default function ModalCurso({ curso, onClose, onSave }) {
   const [form, setForm] = useState({
     nombre: curso?.nombre || '',
-    fecha: curso?.fecha || '',
-    precio_usd: curso?.precio_usd || '',
-    precio_ars: curso?.precio_ars || '',
+    fecha_desde: curso?.fecha_desde || '',
+    fecha_hasta: curso?.fecha_hasta || '',
+    precio1_usd: curso?.precio1_usd || '',
+    precio1_hasta: curso?.precio1_hasta || '',
+    precio2_usd: curso?.precio2_usd || '',
+    precio1_ars: curso?.precio1_ars || '',
   })
   const [saving, setSaving] = useState(false)
 
@@ -19,9 +22,12 @@ export default function ModalCurso({ curso, onClose, onSave }) {
     setSaving(true)
     const payload = {
       nombre: form.nombre.trim(),
-      fecha: form.fecha || null,
-      precio_usd: form.precio_usd || null,
-      precio_ars: form.precio_ars || null,
+      fecha_desde: form.fecha_desde || null,
+      fecha_hasta: form.fecha_hasta || null,
+      precio1_usd: form.precio1_usd || null,
+      precio1_hasta: form.precio1_hasta || null,
+      precio2_usd: form.precio2_usd || null,
+      precio1_ars: form.precio1_ars || null,
     }
     if (curso) {
       await supabase.from('cursos').update(payload).eq('id', curso.id)
@@ -44,18 +50,36 @@ export default function ModalCurso({ curso, onClose, onSave }) {
             <span>Nombre del curso</span>
             <input value={form.nombre} onChange={e => set('nombre', e.target.value)} placeholder="Ej: Implantología avanzada" />
           </label>
-          <label className="field">
-            <span>Fecha</span>
-            <input type="date" value={form.fecha} onChange={e => set('fecha', e.target.value)} />
-          </label>
           <div className="field-row">
-            <label className="field">
-              <span>Precio USD</span>
-              <input type="number" value={form.precio_usd} onChange={e => set('precio_usd', e.target.value)} placeholder="380" />
+            <label className="field field-grow">
+              <span>Fecha inicio</span>
+              <input type="date" value={form.fecha_desde} onChange={e => set('fecha_desde', e.target.value)} />
             </label>
-            <label className="field">
+            <label className="field field-grow">
+              <span>Fecha fin</span>
+              <input type="date" value={form.fecha_hasta} onChange={e => set('fecha_hasta', e.target.value)} />
+            </label>
+          </div>
+
+          <div className="section-label">Precios</div>
+          <div className="field-row">
+            <label className="field field-grow">
+              <span>1° Precio USD</span>
+              <input type="number" value={form.precio1_usd} onChange={e => set('precio1_usd', e.target.value)} placeholder="315" />
+            </label>
+            <label className="field field-grow">
+              <span>Válido hasta</span>
+              <input type="date" value={form.precio1_hasta} onChange={e => set('precio1_hasta', e.target.value)} />
+            </label>
+          </div>
+          <div className="field-row">
+            <label className="field field-grow">
+              <span>2° Precio USD</span>
+              <input type="number" value={form.precio2_usd} onChange={e => set('precio2_usd', e.target.value)} placeholder="350" />
+            </label>
+            <label className="field field-grow">
               <span>Precio ARS referencia</span>
-              <input type="number" value={form.precio_ars} onChange={e => set('precio_ars', e.target.value)} placeholder="215.000" />
+              <input type="number" value={form.precio1_ars} onChange={e => set('precio1_ars', e.target.value)} placeholder="215.000" />
             </label>
           </div>
         </div>

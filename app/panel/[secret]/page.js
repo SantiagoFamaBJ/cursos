@@ -5,7 +5,6 @@ import { notFound } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import CursoCard from '@/components/CursoCard'
 import ModalCurso from '@/components/ModalCurso'
-import ModalInscripto from '@/components/ModalInscripto'
 import DetalleCurso from '@/components/DetalleCurso'
 
 const SECRET = process.env.NEXT_PUBLIC_SECRET_PANEL_PATH
@@ -14,9 +13,8 @@ export default function Panel({ params }) {
   const { secret } = use(params)
   const [cursos, setCursos] = useState([])
   const [loading, setLoading] = useState(true)
-  const [modalCurso, setModalCurso] = useState(null) // null | 'nuevo' | curso obj
+  const [modalCurso, setModalCurso] = useState(null)
   const [cursoAbierto, setCursoAbierto] = useState(null)
-  const [modalInscripto, setModalInscripto] = useState(null)
 
   if (secret !== SECRET) return notFound()
 
@@ -29,7 +27,7 @@ export default function Panel({ params }) {
     const { data } = await supabase
       .from('cursos')
       .select('*, inscriptos(count)')
-      .order('fecha', { ascending: false })
+      .order('fecha_desde', { ascending: false })
     setCursos(data || [])
     setLoading(false)
   }
@@ -46,7 +44,9 @@ export default function Panel({ params }) {
         <div className="header-inner">
           <div className="logo">
             <span className="logo-mark">✦</span>
-            <span>Dental Medrano Training</span>
+            Dental Medrano Training
+            <span className="logo-sep">—</span>
+            Cursos
           </div>
           <button className="btn-primary" onClick={() => setModalCurso('nuevo')}>
             + Nuevo curso
@@ -91,20 +91,6 @@ export default function Panel({ params }) {
         <DetalleCurso
           curso={cursoAbierto}
           onClose={() => setCursoAbierto(null)}
-          onAgregarInscripto={() => setModalInscripto({ cursoId: cursoAbierto.id })}
-        />
-      )}
-
-      {modalInscripto && (
-        <ModalInscripto
-          cursoId={modalInscripto.cursoId}
-          inscripto={modalInscripto.inscripto || null}
-          onClose={() => setModalInscripto(null)}
-          onSave={() => {
-            setModalInscripto(null)
-            // refrescar detalle
-            setCursoAbierto(prev => ({ ...prev }))
-          }}
         />
       )}
     </div>

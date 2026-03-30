@@ -1,7 +1,7 @@
 import './globals.css'
 
 export const metadata = {
-  title: 'Dental Medrano Training',
+  title: 'Dental Medrano Training — Cursos',
   robots: 'noindex, nofollow',
 }
 

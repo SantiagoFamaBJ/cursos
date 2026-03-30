@@ -51,9 +51,9 @@ export default function DetalleCurso({ curso, onClose }) {
   }
 
   function exportarCSV() {
-    const headers = ['Nombre', 'DNI', '1° Pago', 'TC 1°', '2° Pago', 'TC 2°', 'Conf ADM 1°', 'Conf ADM 2°', 'Factura 1°', 'Factura 2°']
+    const headers = ['Nombre', 'DNI', 'Email', '1° Pago', 'TC 1°', '2° Pago', 'TC 2°', 'Conf ADM 1°', 'Conf ADM 2°', 'Factura 1°', 'Factura 2°']
     const rows = inscriptos.map(i => [
-      i.nombre, i.dni,
+      i.nombre, i.dni || '', i.email || '',
       fmt(i.pago1_monto, i.pago1_moneda, i.pago1_ars_equivalente), i.tc_pago1 || '',
       fmt(i.pago2_monto, i.pago2_moneda, i.pago2_ars_equivalente), i.tc_pago2 || '',
       i.confirmado_adm_pago1 ? 'Sí' : 'No',
@@ -71,7 +71,8 @@ export default function DetalleCurso({ curso, onClose }) {
 
   const filtrados = inscriptos.filter(i =>
     i.nombre?.toLowerCase().includes(buscar.toLowerCase()) ||
-    i.dni?.includes(buscar)
+    i.dni?.includes(buscar) ||
+    i.email?.toLowerCase().includes(buscar.toLowerCase())
   )
 
   return (
@@ -91,7 +92,7 @@ export default function DetalleCurso({ curso, onClose }) {
 
         <div className="modal-search">
           <input
-            placeholder="Buscar por nombre o DNI..."
+            placeholder="Buscar por nombre, DNI o email..."
             value={buscar}
             onChange={e => setBuscar(e.target.value)}
             className="search-input"
@@ -124,6 +125,7 @@ export default function DetalleCurso({ curso, onClose }) {
                     <td>
                       <div className="td-nombre">{i.nombre}</div>
                       {i.dni && <div className="td-dni">DNI {i.dni}</div>}
+                      {i.email && <div className="td-email">{i.email}</div>}
                     </td>
                     <td>{fmt(i.pago1_monto, i.pago1_moneda, i.pago1_ars_equivalente)}</td>
                     <td>{i.tc_pago1 ? `$${Number(i.tc_pago1).toLocaleString('es-AR')}` : '—'}</td>
@@ -140,8 +142,10 @@ export default function DetalleCurso({ curso, onClose }) {
                       </td>
                     ))}
                     <td className="td-actions">
-                      <button className="btn-ghost btn-sm" onClick={() => setModalInscripto(i)}>Editar</button>
-                      <button className="btn-ghost btn-sm btn-danger" onClick={() => eliminar(i.id)}>✕</button>
+                      <div className="td-actions-inner">
+                        <button className="btn-ghost btn-sm" onClick={() => setModalInscripto(i)}>Editar</button>
+                        <button className="btn-ghost btn-sm btn-danger" onClick={() => eliminar(i.id)}>✕</button>
+                      </div>
                     </td>
                   </tr>
                 ))}

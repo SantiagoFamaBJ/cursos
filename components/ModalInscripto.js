@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
 const empty = {
-  nombre: '', dni: '',
+  nombre: '', dni: '', email: '',
   pago1_monto: '', pago1_moneda: 'ARS', pago1_ars_equivalente: '', tc_pago1: '',
   pago2_monto: '', pago2_moneda: 'ARS', pago2_ars_equivalente: '', tc_pago2: '',
   confirmado_adm_pago1: false, confirmado_adm_pago2: false,
@@ -24,6 +24,7 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
       curso_id: cursoId,
       nombre: form.nombre.trim(),
       dni: form.dni.trim() || null,
+      email: form.email.trim() || null,
       pago1_monto: form.pago1_monto || null,
       pago1_moneda: form.pago1_monto ? form.pago1_moneda : null,
       pago1_ars_equivalente: form.pago1_moneda === 'USD' ? (form.pago1_ars_equivalente || null) : null,
@@ -54,14 +55,18 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
           <button className="btn-close" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body">
+          <label className="field">
+            <span>Nombre completo</span>
+            <input value={form.nombre} onChange={e => set('nombre', e.target.value)} placeholder="María Victoria Araiz" />
+          </label>
           <div className="field-row">
             <label className="field field-grow">
-              <span>Nombre completo</span>
-              <input value={form.nombre} onChange={e => set('nombre', e.target.value)} placeholder="María Victoria Araiz" />
-            </label>
-            <label className="field">
               <span>DNI</span>
               <input value={form.dni} onChange={e => set('dni', e.target.value)} placeholder="44447562" />
+            </label>
+            <label className="field field-grow">
+              <span>Email</span>
+              <input type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="nombre@email.com" />
             </label>
           </div>
 
@@ -121,7 +126,7 @@ function PagoFields({ monto, moneda, equiv, tc, onChange }) {
           </select>
         </label>
         <label className="field">
-          <span>TC (tipo de cambio)</span>
+          <span>TC</span>
           <input type="number" value={tc} onChange={e => onChange('tc', e.target.value)} placeholder="Opcional" />
         </label>
       </div>
