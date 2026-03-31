@@ -38,11 +38,13 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
       factura_pago1: form.factura_pago1,
       factura_pago2: form.factura_pago2,
     }
-    if (inscripto) {
-      await supabase.from('inscriptos').update(payload).eq('id', inscripto.id)
-    } else {
-      await supabase.from('inscriptos').insert(payload)
-    }
+  if (inscripto) {
+  const { error } = await supabase.from('inscriptos').update(payload).eq('id', inscripto.id)
+  if (error) { console.error(error); alert(error.message); return }
+} else {
+  const { error } = await supabase.from('inscriptos').insert(payload)
+  if (error) { console.error(error); alert(error.message); return }
+}
     setSaving(false)
     onSave()
   }
