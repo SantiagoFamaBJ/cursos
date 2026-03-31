@@ -166,6 +166,7 @@ body {
   box-shadow: var(--shadow-lg);
   display: flex; flex-direction: column;
   max-height: 90vh;
+  overflow: hidden;
 }
 .modal-xl { max-width: 1040px; }
 
@@ -222,7 +223,7 @@ body {
 .check { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent); }
 
 /* ── Table ── */
-.table-wrap { overflow-x: auto; overflow-y: auto; flex: 1; }
+.table-wrap { overflow-x: auto; overflow-y: auto; flex: 1; min-height: 0; }
 .tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
 .tabla th {
   text-align: left; padding: 10px 14px;

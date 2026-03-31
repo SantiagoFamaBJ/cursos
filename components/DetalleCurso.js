@@ -114,7 +114,7 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
         <div className="modal-header">
           <div>
             <h3>{curso.nombre}</h3>
-            <span className="modal-sub">{inscriptos.length} inscriptos · {interesados.length} interesados</span>
+            <span className="modal-sub">{inscriptos.length} inscriptos{!readOnly && ` · ${interesados.length} interesados`}</span>
           </div>
           <div className="modal-header-actions">
             {vista === 'inscriptos' && !readOnly && <button className="btn-ghost" onClick={exportarCSV}>↓ Exportar CSV</button>}
@@ -125,7 +125,7 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
         </div>
         <div style={{padding:'0 26px', borderBottom:'1px solid var(--border)', display:'flex', gap:'4px', flexShrink:0}}>
           <button className={`tab ${vista === 'inscriptos' ? 'active' : ''}`} onClick={() => setVista('inscriptos')}>Inscriptos ({inscriptos.length})</button>
-          <button className={`tab ${vista === 'interesados' ? 'active' : ''}`} onClick={() => setVista('interesados')}>Interesados ({interesados.length})</button>
+          {!readOnly && <button className={`tab ${vista === 'interesados' ? 'active' : ''}`} onClick={() => setVista('interesados')}>Interesados ({interesados.length})</button>}
         </div>
 
         <div className="modal-search">
@@ -185,7 +185,8 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
                         <input
                           type="checkbox"
                           checked={!!i[c.key]}
-                          onChange={() => toggleCheck(i.id, c.key, i[c.key])}
+                          onChange={() => !readOnly && toggleCheck(i.id, c.key, i[c.key])}
+                          disabled={readOnly}
                           className="check"
                         />
                       </td>

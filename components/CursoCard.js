@@ -78,7 +78,7 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOn
             <span className="card-progress-num">{count}</span>
             <span className="card-progress-max">/24</span>
             <span className="card-progress-text">inscriptos</span>
-            {interesadosCount > 0 && <span className="card-progress-interesados">{interesadosCount} inter.</span>}
+            {interesadosCount > 0 && !localView && <span className="card-progress-interesados">{interesadosCount} inter.</span>}
           </div>
           <div className="card-progress-bar">
             <div className="card-progress-fill" style={{width:`${pct}%`}} />

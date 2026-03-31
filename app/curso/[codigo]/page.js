@@ -11,6 +11,8 @@ export default function CursoDictante({ params }) {
   const [loading, setLoading] = useState(true)
   const [buscar, setBuscar] = useState('')
 
+  const [interesados, setInteresados] = useState([])
+
   useEffect(() => {
     async function cargar() {
       const { data: cursos } = await supabase
@@ -28,7 +30,14 @@ export default function CursoDictante({ params }) {
         .eq('curso_id', cursos.id)
         .order('nombre', { ascending: true })
 
+      const { data: inter } = await supabase
+        .from('interesados')
+        .select('nombre, dni, email, celular')
+        .eq('curso_id', cursos.id)
+        .order('nombre', { ascending: true })
+
       setInscriptos(insc || [])
+      setInteresados(inter || [])
       setLoading(false)
     }
     cargar()
@@ -116,6 +125,38 @@ export default function CursoDictante({ params }) {
             </tbody>
           </table>
         </div>
+
+        {(
+          <div style={{marginTop:'36px'}}>
+            <h2 style={{fontFamily:"Fraunces, serif", fontSize:"18px", fontWeight:"400", color:"var(--text)", marginBottom:"16px"}}>
+              Interesados <span style={{fontSize:"14px", color:"var(--text-3)", fontFamily:"'DM Sans', sans-serif"}}>({interesados.length})</span>
+            </h2>
+            <div style={{borderRadius:'10px', border:'1px solid var(--border)', overflow:'hidden'}}>
+              <table className="tabla" style={{width:'100%'}}>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Nombre</th>
+                    <th>DNI</th>
+                    <th>Celular</th>
+                    <th>Email</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {interesados.map((i, idx) => (
+                    <tr key={idx}>
+                      <td className="td-num">{idx + 1}</td>
+                      <td><div className="td-nombre">{i.nombre}</div></td>
+                      <td>{i.dni || '—'}</td>
+                      <td>{i.celular || '—'}</td>
+                      <td>{i.email || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )
