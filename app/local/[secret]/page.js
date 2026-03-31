@@ -3,68 +3,58 @@
 import { use, useEffect, useState } from 'react'
 import { notFound } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import CursoCard from '@/components/CursoCard'
+import DetalleCurso from '@/components/DetalleCurso'
+import TodosInscriptos from '@/components/TodosInscriptos'
+import Ranking from '@/components/Ranking'
 
-export default function CursoDictante({ params }) {
-  const { codigo } = use(params)
-  const [curso, setCurso] = useState(null)
-  const [inscriptos, setInscriptos] = useState([])
+const SECRET = process.env.NEXT_PUBLIC_LOCAL_PATH
+
+export default function Local({ params }) {
+  const { secret } = use(params)
+  const [tab, setTab] = useState('cursos')
+  const [cursos, setCursos] = useState([])
   const [loading, setLoading] = useState(true)
-  const [buscar, setBuscar] = useState('')
+  const [cursoAbierto, setCursoAbierto] = useState(null)
+  const [filtroDictante, setFiltroDictante] = useState('')
 
-  const [interesados, setInteresados] = useState([])
+  if (secret !== SECRET) return notFound()
 
-  useEffect(() => {
-    async function cargar() {
-      const { data: cursos } = await supabase
-        .from('cursos')
-        .select('*')
-        .eq('codigo_dictante', codigo)
-        .single()
+  useEffect(() => { cargarCursos() }, [])
 
-      if (!cursos) { setLoading(false); return }
-      setCurso(cursos)
+  async function cargarCursos() {
+    setLoading(true)
+    const { data: cursosData } = await supabase
+      .from('cursos')
+      .select('*')
+      .order('fecha_desde', { ascending: false })
 
-      const { data: insc } = await supabase
-        .from('inscriptos')
-        .select('nombre, dni, email, celular')
-        .eq('curso_id', cursos.id)
-        .order('nombre', { ascending: true })
+    if (!cursosData) { setLoading(false); return }
 
-      const { data: inter } = await supabase
-        .from('interesados')
-        .select('nombre, dni, email, celular')
-        .eq('curso_id', cursos.id)
-        .order('nombre', { ascending: true })
+    const ids = cursosData.map(c => c.id)
 
-      setInscriptos(insc || [])
-      setInteresados(inter || [])
-      setLoading(false)
-    }
-    cargar()
-  }, [codigo])
+    const { data: inscData } = await supabase
+      .from('inscriptos')
+      .select('*')
+      .in('curso_id', ids)
 
-  if (loading) return (
-    <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',background:'var(--bg)'}}>
-      <p style={{color:'var(--text-2)'}}>Cargando...</p>
-    </div>
-  )
+    const { data: interData } = await supabase
+      .from('interesados')
+      .select('*')
+      .in('curso_id', ids)
 
-  if (!curso) return notFound()
+    const cursosConDatos = cursosData.map(c => ({
+      ...c,
+      inscriptos_data: (inscData || []).filter(i => i.curso_id === c.id),
+      interesados_data: (interData || []).filter(i => i.curso_id === c.id),
+    }))
 
-  function formatFecha(desde, hasta) {
-    if (!desde) return null
-    const d = new Date(desde + 'T00:00:00')
-    const opts = { day: 'numeric', month: 'long', year: 'numeric' }
-    if (!hasta || desde === hasta) return d.toLocaleDateString('es-AR', opts)
-    const h = new Date(hasta + 'T00:00:00')
-    if (d.getMonth() === h.getMonth()) return `${d.getDate()} al ${h.toLocaleDateString('es-AR', opts)}`
-    return `${d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })} — ${h.toLocaleDateString('es-AR', opts)}`
+    setCursos(cursosConDatos)
+    setLoading(false)
   }
 
-  const filtrados = inscriptos.filter(i =>
-    i.nombre?.toLowerCase().includes(buscar.toLowerCase()) ||
-    i.dni?.includes(buscar)
-  )
+  const dictantes = [...new Set(cursos.map(c => c.dictante).filter(Boolean))].sort()
+  const cursosFiltrados = filtroDictante ? cursos.filter(c => c.dictante === filtroDictante) : cursos
 
   return (
     <div className="app">
@@ -72,92 +62,60 @@ export default function CursoDictante({ params }) {
         <div className="header-inner">
           <div className="logo">
             <img src="/logo.png" alt="Dental Medrano Training" />
+            <span className="logo-sep">|</span>
+            <span className="logo-label">Cursos</span>
           </div>
+          <span style={{fontSize:'11px', color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'.06em'}}>Solo lectura</span>
         </div>
       </header>
 
-      <main className="main" style={{maxWidth:'720px'}}>
-        <div style={{marginBottom:'28px'}}>
-          <h1 style={{fontFamily:'Fraunces, serif', fontSize:'26px', fontWeight:'400', color:'var(--text)', marginBottom:'6px'}}>{curso.nombre}</h1>
-          {curso.dictante && <p style={{color:'var(--accent)', fontSize:'14px', fontWeight:'500', marginBottom:'4px'}}>{curso.dictante}</p>}
-          {formatFecha(curso.fecha_desde, curso.fecha_hasta) && (
-            <p style={{color:'var(--text-3)', fontSize:'13px'}}>{formatFecha(curso.fecha_desde, curso.fecha_hasta)}</p>
-          )}
+      <main className="main">
+        <div className="tabs">
+          <button className={`tab ${tab === 'cursos' ? 'active' : ''}`} onClick={() => setTab('cursos')}>Cursos</button>
+          <button className={`tab ${tab === 'inscriptos' ? 'active' : ''}`} onClick={() => setTab('inscriptos')}>Todos los inscriptos</button>
+          <button className={`tab ${tab === 'ranking' ? 'active' : ''}`} onClick={() => setTab('ranking')}>Ranking</button>
         </div>
 
-        <div style={{marginBottom:'16px', display:'flex', alignItems:'center', justifyContent:'space-between'}}>
-          <span style={{color:'var(--text-3)', fontSize:'13px'}}>{filtrados.length} inscripto{filtrados.length !== 1 ? 's' : ''}</span>
-        </div>
-
-        <input
-          placeholder="Buscar por nombre o DNI..."
-          value={buscar}
-          onChange={e => setBuscar(e.target.value)}
-          className="search-input"
-          style={{marginBottom:'16px'}}
-        />
-
-        <div style={{borderRadius:'10px', border:'1px solid var(--border)', overflow:'hidden'}}>
-          <table className="tabla" style={{width:'100%'}}>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Nombre</th>
-                <th>DNI</th>
-                <th>Email</th>
-                <th>Celular</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtrados.length === 0 ? (
-                <tr><td colSpan="4" style={{textAlign:'center', padding:'32px', color:'var(--text-3)'}}>No hay inscriptos.</td></tr>
-              ) : (
-                filtrados.map((i, idx) => (
-                  <tr key={idx}>
-                    <td className="td-num">{idx + 1}</td>
-                    <td><div className="td-nombre">{i.nombre}</div></td>
-                    <td>{i.dni || '—'}</td>
-                    <td>{i.email || '—'}</td>
-                    <td>{i.celular || '—'}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {interesados.length > 0 && (
-          <div style={{marginTop:'36px'}}>
-            <h2 style={{fontFamily:'Fraunces, serif', fontSize:'18px', fontWeight:'400', color:'var(--text)', marginBottom:'16px'}}>
-              Interesados <span style={{fontSize:'14px', color:'var(--text-3)', fontFamily:"'DM Sans', sans-serif"}}>({interesados.length})</span>
-            </h2>
-            <div style={{borderRadius:'10px', border:'1px solid var(--border)', overflow:'hidden'}}>
-              <table className="tabla" style={{width:'100%'}}>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Nombre</th>
-                    <th>DNI</th>
-                    <th>Celular</th>
-                    <th>Email</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {interesados.map((i, idx) => (
-                    <tr key={idx}>
-                      <td className="td-num">{idx + 1}</td>
-                      <td><div className="td-nombre">{i.nombre}</div></td>
-                      <td>{i.dni || '—'}</td>
-                      <td>{i.celular || '—'}</td>
-                      <td>{i.email || '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        {tab === 'cursos' && (
+          <>
+            {dictantes.length > 0 && (
+              <div className="filtro-dictante">
+                <button className={`btn-ghost btn-sm ${filtroDictante === '' ? 'active' : ''}`} onClick={() => setFiltroDictante('')}>Todos</button>
+                {dictantes.map(d => (
+                  <button key={d} className={`btn-ghost btn-sm ${filtroDictante === d ? 'active' : ''}`} onClick={() => setFiltroDictante(d)}>{d}</button>
+                ))}
+              </div>
+            )}
+            {loading ? (
+              <div className="empty-state">Cargando...</div>
+            ) : (
+              <div className="grid">
+                {cursosFiltrados.map(c => (
+                  <CursoCard
+                    key={c.id}
+                    curso={c}
+                    onAbrir={() => setCursoAbierto(c)}
+                    onEditar={null}
+                    onEliminar={null}
+                    readOnly
+                    localView
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
+        {tab === 'inscriptos' && <TodosInscriptos />}
+        {tab === 'ranking' && <Ranking />}
       </main>
+
+      {cursoAbierto && (
+        <DetalleCurso
+          curso={cursoAbierto}
+          onClose={() => setCursoAbierto(null)}
+          readOnly
+        />
+      )}
     </div>
   )
 }

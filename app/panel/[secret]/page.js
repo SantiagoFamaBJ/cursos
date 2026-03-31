@@ -26,11 +26,32 @@ export default function Panel({ params }) {
 
   async function cargarCursos() {
     setLoading(true)
-    const { data } = await supabase
+    const { data: cursosData } = await supabase
       .from('cursos')
-      .select('*, inscriptos_data:inscriptos(*)')
+      .select('*')
       .order('fecha_desde', { ascending: false })
-    setCursos(data || [])
+
+    if (!cursosData) { setLoading(false); return }
+
+    const ids = cursosData.map(c => c.id)
+
+    const { data: inscData } = await supabase
+      .from('inscriptos')
+      .select('*')
+      .in('curso_id', ids)
+
+    const { data: interData } = await supabase
+      .from('interesados')
+      .select('*')
+      .in('curso_id', ids)
+
+    const cursosConDatos = cursosData.map(c => ({
+      ...c,
+      inscriptos_data: (inscData || []).filter(i => i.curso_id === c.id),
+      interesados_data: (interData || []).filter(i => i.curso_id === c.id),
+    }))
+
+    setCursos(cursosConDatos)
     setLoading(false)
   }
 
