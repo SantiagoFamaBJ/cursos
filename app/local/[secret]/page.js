@@ -77,6 +77,7 @@ export default function Local({ params }) {
                     onEditar={null}
                     onEliminar={null}
                     readOnly
+                    localView
                   />
                 ))}
               </div>

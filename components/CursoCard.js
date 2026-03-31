@@ -1,6 +1,6 @@
 'use client'
 
-export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOnly }) {
+export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOnly, localView }) {
   const inscriptos = curso.inscriptos_data || []
   const count = inscriptos.length || curso.inscriptos?.[0]?.count || 0
 
@@ -38,18 +38,22 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOn
   function calcFinanciero() {
     let total = 0
     let pendientes = 0
+    let factura1Pend = 0
+    let factura2Pend = 0
     inscriptos.forEach(i => {
       const p1 = i.pago1_moneda === 'USD' ? (i.pago1_ars_equivalente || 0) : (i.pago1_monto || 0)
       const p2 = i.pago2_moneda === 'USD' ? (i.pago2_ars_equivalente || 0) : (i.pago2_monto || 0)
       total += Number(p1) + Number(p2)
       if (!i.pago2_monto) pendientes++
+      if (i.confirmado_adm_pago1 && !i.factura_pago1) factura1Pend++
+      if (i.confirmado_adm_pago2 && !i.factura_pago2) factura2Pend++
     })
-    return { total, pendientes }
+    return { total, pendientes, factura1Pend, factura2Pend }
   }
 
   const countdown = getCountdown()
   const fecha = formatFecha(curso.fecha_desde, curso.fecha_hasta)
-  const { total, pendientes } = calcFinanciero()
+  const { total, pendientes, factura1Pend, factura2Pend } = calcFinanciero()
 
   return (
     <div className="card" onClick={onAbrir}>
@@ -73,17 +77,32 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOn
             <span className="card-stat-value">{count}</span>
             <span className="card-stat-label">Inscriptos</span>
           </div>
-          <div className="card-stat">
-            <span className={`card-stat-value ${pendientes > 0 ? 'warning' : ''}`}>{pendientes}</span>
-            <span className="card-stat-label">2° pago pend.</span>
-          </div>
-          <div className="card-stat">
-            <span className="card-stat-value" style={{fontSize:'14px', paddingTop:'4px'}}>
-              {total > 0 ? formatMonto(total) : '—'}
-            </span>
-            <span className="card-stat-label">Recaudado</span>
-            {total > 0 && <span className="card-stat-sub">ARS</span>}
-          </div>
+          {localView ? (
+            <>
+              <div className="card-stat">
+                <span className={`card-stat-value ${factura1Pend > 0 ? 'warning' : ''}`}>{factura1Pend}</span>
+                <span className="card-stat-label">Factura 1° pend.</span>
+              </div>
+              <div className="card-stat">
+                <span className={`card-stat-value ${factura2Pend > 0 ? 'warning' : ''}`}>{factura2Pend}</span>
+                <span className="card-stat-label">Factura 2° pend.</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="card-stat">
+                <span className={`card-stat-value ${pendientes > 0 ? 'warning' : ''}`}>{pendientes}</span>
+                <span className="card-stat-label">2° pago pend.</span>
+              </div>
+              <div className="card-stat">
+                <span className="card-stat-value" style={{fontSize:'14px', paddingTop:'4px'}}>
+                  {total > 0 ? formatMonto(total) : '—'}
+                </span>
+                <span className="card-stat-label">Recaudado</span>
+                {total > 0 && <span className="card-stat-sub">ARS</span>}
+              </div>
+            </>
+          )}
         </div>
       </div>
       {!readOnly && (
