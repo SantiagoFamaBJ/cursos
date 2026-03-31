@@ -127,7 +127,7 @@ function PagoFields({ monto, moneda, equiv, tc, onChange }) {
         </label>
         <label className="field">
           <span>TC</span>
-          <input type="number" value={tc} onChange={e => onChange('tc', e.target.value)} placeholder="Opcional" />
+          <input type="text" inputMode="decimal" value={tc} onChange={e => onChange('tc', e.target.value)} placeholder="1435" />
         </label>
       </div>
       {moneda === 'USD' && (
