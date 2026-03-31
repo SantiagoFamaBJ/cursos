@@ -283,3 +283,11 @@ body {
 
 /* ── Falta info ── */
 .td-falta { color: var(--danger); font-size: 11px; font-family: 'DM Sans', sans-serif; }
+
+/* ── Progress bar en card ── */
+.card-progress { padding: 0 20px 14px; }
+.card-progress-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+.card-progress-label { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 300; color: var(--text); }
+.card-progress-interesados { font-size: 11px; color: var(--warning-text); background: var(--warning-bg); padding: 2px 8px; border-radius: 20px; }
+.card-progress-bar { height: 4px; background: var(--surface3); border-radius: 2px; overflow: hidden; }
+.card-progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s; }

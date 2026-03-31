@@ -3,49 +3,68 @@
 import { use, useEffect, useState } from 'react'
 import { notFound } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import CursoCard from '@/components/CursoCard'
-import ModalCurso from '@/components/ModalCurso'
-import DetalleCurso from '@/components/DetalleCurso'
-import TodosInscriptos from '@/components/TodosInscriptos'
-import Ranking from '@/components/Ranking'
 
-const SECRET = process.env.NEXT_PUBLIC_SECRET_PANEL_PATH
-
-export default function Panel({ params }) {
-  const { secret } = use(params)
-  const [tab, setTab] = useState('cursos')
-  const [cursos, setCursos] = useState([])
+export default function CursoDictante({ params }) {
+  const { codigo } = use(params)
+  const [curso, setCurso] = useState(null)
+  const [inscriptos, setInscriptos] = useState([])
   const [loading, setLoading] = useState(true)
-  const [modalCurso, setModalCurso] = useState(null)
-  const [cursoAbierto, setCursoAbierto] = useState(null)
-  const [filtroDictante, setFiltroDictante] = useState('')
+  const [buscar, setBuscar] = useState('')
 
-  if (secret !== SECRET) return notFound()
+  const [interesados, setInteresados] = useState([])
 
-  useEffect(() => { cargarCursos() }, [])
+  useEffect(() => {
+    async function cargar() {
+      const { data: cursos } = await supabase
+        .from('cursos')
+        .select('*')
+        .eq('codigo_dictante', codigo)
+        .single()
 
-  async function cargarCursos() {
-    setLoading(true)
-    const { data } = await supabase
-      .from('cursos')
-      .select('*, inscriptos_data:inscriptos(*), interesados_data:interesados(*)')
-      .order('fecha_desde', { ascending: false })
-    setCursos(data || [])
-    setLoading(false)
+      if (!cursos) { setLoading(false); return }
+      setCurso(cursos)
+
+      const { data: insc } = await supabase
+        .from('inscriptos')
+        .select('nombre, dni, email, celular')
+        .eq('curso_id', cursos.id)
+        .order('nombre', { ascending: true })
+
+      const { data: inter } = await supabase
+        .from('interesados')
+        .select('nombre, dni, email, celular')
+        .eq('curso_id', cursos.id)
+        .order('nombre', { ascending: true })
+
+      setInscriptos(insc || [])
+      setInteresados(inter || [])
+      setLoading(false)
+    }
+    cargar()
+  }, [codigo])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',background:'var(--bg)'}}>
+      <p style={{color:'var(--text-2)'}}>Cargando...</p>
+    </div>
+  )
+
+  if (!curso) return notFound()
+
+  function formatFecha(desde, hasta) {
+    if (!desde) return null
+    const d = new Date(desde + 'T00:00:00')
+    const opts = { day: 'numeric', month: 'long', year: 'numeric' }
+    if (!hasta || desde === hasta) return d.toLocaleDateString('es-AR', opts)
+    const h = new Date(hasta + 'T00:00:00')
+    if (d.getMonth() === h.getMonth()) return `${d.getDate()} al ${h.toLocaleDateString('es-AR', opts)}`
+    return `${d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })} — ${h.toLocaleDateString('es-AR', opts)}`
   }
 
-  async function eliminarCurso(id) {
-    if (!confirm('¿Eliminar este curso y todos sus inscriptos?')) return
-    await supabase.from('cursos').delete().eq('id', id)
-    cargarCursos()
-  }
-
-  // Dictantes únicos para el filtro
-  const dictantes = [...new Set(cursos.map(c => c.dictante).filter(Boolean))].sort()
-
-  const cursosFiltrados = filtroDictante
-    ? cursos.filter(c => c.dictante === filtroDictante)
-    : cursos
+  const filtrados = inscriptos.filter(i =>
+    i.nombre?.toLowerCase().includes(buscar.toLowerCase()) ||
+    i.dni?.includes(buscar)
+  )
 
   return (
     <div className="app">
@@ -53,95 +72,92 @@ export default function Panel({ params }) {
         <div className="header-inner">
           <div className="logo">
             <img src="/logo.png" alt="Dental Medrano Training" />
-            <span className="logo-sep">|</span>
-            <span className="logo-label">Cursos</span>
-          </div>
-          <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
-            <a
-              href={`/local/${process.env.NEXT_PUBLIC_LOCAL_PATH}`}
-              target="_blank"
-              style={{fontSize:'13px', color:'var(--text-3)', textDecoration:'none', borderBottom:'1px solid var(--border)'}}
-            >
-              Vista local ↗
-            </a>
-            {tab === 'cursos' && (
-              <button className="btn-primary" onClick={() => setModalCurso('nuevo')}>
-                + Nuevo curso
-              </button>
-            )}
           </div>
         </div>
       </header>
 
-      <main className="main">
-        <div className="tabs">
-          <button className={`tab ${tab === 'cursos' ? 'active' : ''}`} onClick={() => setTab('cursos')}>Cursos</button>
-          <button className={`tab ${tab === 'inscriptos' ? 'active' : ''}`} onClick={() => setTab('inscriptos')}>Todos los inscriptos</button>
-          <button className={`tab ${tab === 'ranking' ? 'active' : ''}`} onClick={() => setTab('ranking')}>Ranking</button>
+      <main className="main" style={{maxWidth:'720px'}}>
+        <div style={{marginBottom:'28px'}}>
+          <h1 style={{fontFamily:'Fraunces, serif', fontSize:'26px', fontWeight:'400', color:'var(--text)', marginBottom:'6px'}}>{curso.nombre}</h1>
+          {curso.dictante && <p style={{color:'var(--accent)', fontSize:'14px', fontWeight:'500', marginBottom:'4px'}}>{curso.dictante}</p>}
+          {formatFecha(curso.fecha_desde, curso.fecha_hasta) && (
+            <p style={{color:'var(--text-3)', fontSize:'13px'}}>{formatFecha(curso.fecha_desde, curso.fecha_hasta)}</p>
+          )}
         </div>
 
-        {tab === 'cursos' && (
-          <>
-            {dictantes.length > 0 && (
-              <div className="filtro-dictante">
-                <button
-                  className={`btn-ghost btn-sm ${filtroDictante === '' ? 'active' : ''}`}
-                  onClick={() => setFiltroDictante('')}
-                >
-                  Todos
-                </button>
-                {dictantes.map(d => (
-                  <button
-                    key={d}
-                    className={`btn-ghost btn-sm ${filtroDictante === d ? 'active' : ''}`}
-                    onClick={() => setFiltroDictante(d)}
-                  >
-                    {d}
-                  </button>
-                ))}
-              </div>
-            )}
-            {loading ? (
-              <div className="empty-state">Cargando...</div>
-            ) : cursosFiltrados.length === 0 ? (
-              <div className="empty-state">
-                <p>No hay cursos todavía.</p>
-                <button className="btn-primary" onClick={() => setModalCurso('nuevo')}>Crear el primero</button>
-              </div>
-            ) : (
-              <div className="grid">
-                {cursosFiltrados.map(c => (
-                  <CursoCard
-                    key={c.id}
-                    curso={c}
-                    onAbrir={() => setCursoAbierto(c)}
-                    onEditar={() => setModalCurso(c)}
-                    onEliminar={() => eliminarCurso(c.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </>
+        <div style={{marginBottom:'16px', display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+          <span style={{color:'var(--text-3)', fontSize:'13px'}}>{filtrados.length} inscripto{filtrados.length !== 1 ? 's' : ''}</span>
+        </div>
+
+        <input
+          placeholder="Buscar por nombre o DNI..."
+          value={buscar}
+          onChange={e => setBuscar(e.target.value)}
+          className="search-input"
+          style={{marginBottom:'16px'}}
+        />
+
+        <div style={{borderRadius:'10px', border:'1px solid var(--border)', overflow:'hidden'}}>
+          <table className="tabla" style={{width:'100%'}}>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nombre</th>
+                <th>DNI</th>
+                <th>Email</th>
+                <th>Celular</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtrados.length === 0 ? (
+                <tr><td colSpan="4" style={{textAlign:'center', padding:'32px', color:'var(--text-3)'}}>No hay inscriptos.</td></tr>
+              ) : (
+                filtrados.map((i, idx) => (
+                  <tr key={idx}>
+                    <td className="td-num">{idx + 1}</td>
+                    <td><div className="td-nombre">{i.nombre}</div></td>
+                    <td>{i.dni || '—'}</td>
+                    <td>{i.email || '—'}</td>
+                    <td>{i.celular || '—'}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {interesados.length > 0 && (
+          <div style={{marginTop:'36px'}}>
+            <h2 style={{fontFamily:'Fraunces, serif', fontSize:'18px', fontWeight:'400', color:'var(--text)', marginBottom:'16px'}}>
+              Interesados <span style={{fontSize:'14px', color:'var(--text-3)', fontFamily:"'DM Sans', sans-serif"}}>({interesados.length})</span>
+            </h2>
+            <div style={{borderRadius:'10px', border:'1px solid var(--border)', overflow:'hidden'}}>
+              <table className="tabla" style={{width:'100%'}}>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Nombre</th>
+                    <th>DNI</th>
+                    <th>Celular</th>
+                    <th>Email</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {interesados.map((i, idx) => (
+                    <tr key={idx}>
+                      <td className="td-num">{idx + 1}</td>
+                      <td><div className="td-nombre">{i.nombre}</div></td>
+                      <td>{i.dni || '—'}</td>
+                      <td>{i.celular || '—'}</td>
+                      <td>{i.email || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
-
-        {tab === 'inscriptos' && <TodosInscriptos />}
-        {tab === 'ranking' && <Ranking />}
       </main>
-
-      {modalCurso && (
-        <ModalCurso
-          curso={modalCurso === 'nuevo' ? null : modalCurso}
-          onClose={() => setModalCurso(null)}
-          onSave={() => { setModalCurso(null); cargarCursos() }}
-        />
-      )}
-
-      {cursoAbierto && (
-        <DetalleCurso
-          curso={cursoAbierto}
-          onClose={() => { setCursoAbierto(null); cargarCursos() }}
-        />
-      )}
     </div>
   )
 }

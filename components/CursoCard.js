@@ -73,12 +73,16 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOn
           {curso.precio2_usd && <span className="badge badge-usd">USD {curso.precio2_usd}</span>}
           {curso.precio1_ars && <span className="badge badge-ars">$ {Number(curso.precio1_ars).toLocaleString('es-AR')}</span>}
         </div>
-        <div className="card-stats">
-          <div className="card-stat">
-            <span className="card-stat-value">{count}</span>
-            <span className="card-stat-label">Inscriptos</span>
-            {interesadosCount > 0 && <span className="card-stat-sub">{interesadosCount} interesados</span>}
+        <div className="card-progress">
+          <div className="card-progress-header">
+            <span className="card-progress-label">{count}<span style={{opacity:.4, fontSize:'11px'}}>/24</span> inscriptos</span>
+            {interesadosCount > 0 && <span className="card-progress-interesados">{interesadosCount} interesados</span>}
           </div>
+          <div className="card-progress-bar">
+            <div className="card-progress-fill" style={{width:`${Math.min(count/24*100,100)}%`}} />
+          </div>
+        </div>
+        <div className="card-stats">
           {localView ? (
             <>
               <div className="card-stat">
