@@ -5,7 +5,6 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOn
   const count = inscriptos.length || curso.inscriptos?.[0]?.count || 0
   const interesadosCount = curso.interesados_data?.length || 0
 
-  // Countdown
   function getCountdown() {
     const hoy = new Date(); hoy.setHours(0,0,0,0)
     const desde = curso.fecha_desde ? new Date(curso.fecha_desde + 'T00:00:00') : null
@@ -35,12 +34,8 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOn
     return `$${Math.round(n/1000)}k`
   }
 
-  // Financiero
   function calcFinanciero() {
-    let total = 0
-    let pendientes = 0
-    let factura1Pend = 0
-    let factura2Pend = 0
+    let total = 0, pendientes = 0, factura1Pend = 0, factura2Pend = 0
     inscriptos.forEach(i => {
       const p1 = i.pago1_moneda === 'USD' ? (i.pago1_ars_equivalente || 0) : (i.pago1_monto || 0)
       const p2 = i.pago2_moneda === 'USD' ? (i.pago2_ars_equivalente || 0) : (i.pago2_monto || 0)
@@ -55,6 +50,7 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOn
   const countdown = getCountdown()
   const fecha = formatFecha(curso.fecha_desde, curso.fecha_hasta)
   const { total, pendientes, factura1Pend, factura2Pend } = calcFinanciero()
+  const pct = Math.min(Math.round(count / 24 * 100), 100)
 
   return (
     <div className="card" onClick={onAbrir}>
@@ -64,6 +60,7 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOn
           {countdown.label}
         </div>
       )}
+
       <div className="card-body">
         <h2 className="card-title">{curso.nombre}</h2>
         {curso.dictante && <p className="card-dictante">{curso.dictante}</p>}
@@ -72,50 +69,52 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOn
           {curso.precio1_usd && <span className="badge badge-usd">USD {curso.precio1_usd}{curso.precio1_hasta ? ` hasta ${new Date(curso.precio1_hasta+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'})}` : ''}</span>}
           {curso.precio2_usd && <span className="badge badge-usd">USD {curso.precio2_usd}</span>}
           {curso.precio1_ars && <span className="badge badge-ars">$ {Number(curso.precio1_ars).toLocaleString('es-AR')}</span>}
+        </div>
       </div>
+
       <div className="card-bottom">
-          <div className="card-progress-row">
-            <div className="card-progress-count">
-              <span className="card-progress-num">{count}</span>
-              <span className="card-progress-max">/24</span>
-              <span className="card-progress-text">inscriptos</span>
-              {interesadosCount > 0 && <span className="card-progress-interesados">{interesadosCount} inter.</span>}
-            </div>
-            <div className="card-progress-bar">
-              <div className="card-progress-fill" style={{width:`${Math.min(count/24*100,100)}%`}} />
-            </div>
+        <div className="card-progress-row">
+          <div className="card-progress-count">
+            <span className="card-progress-num">{count}</span>
+            <span className="card-progress-max">/24</span>
+            <span className="card-progress-text">inscriptos</span>
+            {interesadosCount > 0 && <span className="card-progress-interesados">{interesadosCount} inter.</span>}
           </div>
-          <div className="card-stats">
-            {localView ? (
-              <>
-                <div className="card-stat">
-                  <span className={`card-stat-value ${factura1Pend > 0 ? 'warning' : ''}`}>{factura1Pend}</span>
-                  <span className="card-stat-label">Factura 1° pend.</span>
-                </div>
-                <div className="card-stat">
-                  <span className={`card-stat-value ${factura2Pend > 0 ? 'warning' : ''}`}>{factura2Pend}</span>
-                  <span className="card-stat-label">Factura 2° pend.</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="card-stat">
-                  <span className={`card-stat-value ${pendientes > 0 ? 'warning' : ''}`}>{pendientes}</span>
-                  <span className="card-stat-label">2° pago pend.</span>
-                </div>
-                <div className="card-stat">
-                  <span className="card-stat-value">{total > 0 ? formatMonto(total) : '—'}</span>
-                  <span className="card-stat-label">Recaudado ARS</span>
-                </div>
-              </>
-            )}
+          <div className="card-progress-bar">
+            <div className="card-progress-fill" style={{width:`${pct}%`}} />
           </div>
+        </div>
+        <div className="card-stats">
+          {localView ? (
+            <>
+              <div className="card-stat">
+                <span className={`card-stat-value ${factura1Pend > 0 ? 'warning' : ''}`}>{factura1Pend}</span>
+                <span className="card-stat-label">Factura 1° pend.</span>
+              </div>
+              <div className="card-stat">
+                <span className={`card-stat-value ${factura2Pend > 0 ? 'warning' : ''}`}>{factura2Pend}</span>
+                <span className="card-stat-label">Factura 2° pend.</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="card-stat">
+                <span className={`card-stat-value ${pendientes > 0 ? 'warning' : ''}`}>{pendientes}</span>
+                <span className="card-stat-label">2° pago pend.</span>
+              </div>
+              <div className="card-stat">
+                <span className="card-stat-value">{total > 0 ? formatMonto(total) : '—'}</span>
+                <span className="card-stat-label">Recaudado ARS</span>
+              </div>
+            </>
+          )}
+        </div>
       </div>
+
       <div className="card-actions" onClick={e => e.stopPropagation()}>
         {curso.codigo_dictante && (
           <button
             className="btn-ghost btn-sm"
-            title="Copiar link dictante"
             onClick={() => {
               navigator.clipboard.writeText(`${window.location.origin}/curso/${curso.codigo_dictante}`)
               const btn = document.activeElement
