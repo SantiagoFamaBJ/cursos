@@ -20,7 +20,7 @@ function fmt(monto, moneda, equiv) {
   return `$${Number(monto).toLocaleString('es-AR')}`
 }
 
-export default function DetalleCurso({ curso, onClose }) {
+export default function DetalleCurso({ curso, onClose, readOnly }) {
   const [inscriptos, setInscriptos] = useState([])
   const [buscar, setBuscar] = useState('')
   const [loading, setLoading] = useState(true)
@@ -84,8 +84,8 @@ export default function DetalleCurso({ curso, onClose }) {
             <span className="modal-sub">{inscriptos.length} inscriptos</span>
           </div>
           <div className="modal-header-actions">
-            <button className="btn-ghost" onClick={exportarCSV}>↓ Exportar CSV</button>
-            <button className="btn-primary" onClick={() => setModalInscripto('nuevo')}>+ Agregar</button>
+            {!readOnly && <button className="btn-ghost" onClick={exportarCSV}>↓ Exportar CSV</button>}
+            {!readOnly && <button className="btn-primary" onClick={() => setModalInscripto('nuevo')}>+ Agregar</button>}
             <button className="btn-close" onClick={onClose}>✕</button>
           </div>
         </div>
@@ -142,10 +142,10 @@ export default function DetalleCurso({ curso, onClose }) {
                       </td>
                     ))}
                     <td className="td-actions">
-                      <div className="td-actions-inner">
+                      {!readOnly && <div className="td-actions-inner">
                         <button className="btn-ghost btn-sm" onClick={() => setModalInscripto(i)}>Editar</button>
                         <button className="btn-ghost btn-sm btn-danger" onClick={() => eliminar(i.id)}>✕</button>
-                      </div>
+                      </div>}
                     </td>
                   </tr>
                 ))}

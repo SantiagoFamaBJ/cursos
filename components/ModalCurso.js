@@ -13,6 +13,7 @@ export default function ModalCurso({ curso, onClose, onSave }) {
     precio1_hasta: curso?.precio1_hasta || '',
     precio2_usd: curso?.precio2_usd || '',
     precio1_ars: curso?.precio1_ars || '',
+    codigo_dictante: curso?.codigo_dictante || '',
   })
   const [saving, setSaving] = useState(false)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
@@ -29,6 +30,7 @@ export default function ModalCurso({ curso, onClose, onSave }) {
       precio1_hasta: form.precio1_hasta || null,
       precio2_usd: form.precio2_usd || null,
       precio1_ars: form.precio1_ars || null,
+      codigo_dictante: form.codigo_dictante.trim() || null,
     }
     if (curso) {
       await supabase.from('cursos').update(payload).eq('id', curso.id)
@@ -87,6 +89,12 @@ export default function ModalCurso({ curso, onClose, onSave }) {
             </label>
           </div>
         </div>
+          <div className="section-label">Acceso dictante</div>
+          <label className="field">
+            <span>Código dictante</span>
+            <input value={form.codigo_dictante} onChange={e => set('codigo_dictante', e.target.value)} placeholder="ej: sifontes2026" />
+          </label>
+
         <div className="modal-footer">
           <button className="btn-ghost" onClick={onClose}>Cancelar</button>
           <button className="btn-primary" onClick={guardar} disabled={saving}>

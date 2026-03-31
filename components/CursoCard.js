@@ -1,6 +1,6 @@
 'use client'
 
-export default function CursoCard({ curso, onAbrir, onEditar, onEliminar }) {
+export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOnly }) {
   const inscriptos = curso.inscriptos_data || []
   const count = inscriptos.length || curso.inscriptos?.[0]?.count || 0
 
@@ -86,10 +86,12 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar }) {
           </div>
         </div>
       </div>
-      <div className="card-actions" onClick={e => e.stopPropagation()}>
-        <button className="btn-ghost btn-sm" onClick={onEditar}>Editar</button>
-        <button className="btn-ghost btn-sm btn-danger" onClick={onEliminar}>Eliminar</button>
-      </div>
+      {!readOnly && (
+        <div className="card-actions" onClick={e => e.stopPropagation()}>
+          <button className="btn-ghost btn-sm" onClick={onEditar}>Editar</button>
+          <button className="btn-ghost btn-sm btn-danger" onClick={onEliminar}>Eliminar</button>
+        </div>
+      )}
     </div>
   )
 }
