@@ -4,9 +4,9 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
 const empty = {
-  nombre: '', dni: '', email: '',
-  pago1_monto: '', pago1_moneda: 'ARS', pago1_ars_equivalente: '', tc_pago1: '',
-  pago2_monto: '', pago2_moneda: 'ARS', pago2_ars_equivalente: '', tc_pago2: '',
+  nombre: '', dni: '', email: '', celular: '',
+  pago1_monto: '', pago1_moneda: 'ARS', pago1_ars_equivalente: '', tc_pago1: '', link_pago1: false,
+  pago2_monto: '', pago2_moneda: 'ARS', pago2_ars_equivalente: '', tc_pago2: '', link_pago2: false,
   confirmado_adm_pago1: false, confirmado_adm_pago2: false,
   factura_pago1: false, factura_pago2: false,
 }
@@ -16,12 +16,15 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
     ...inscripto,
     dni: inscripto.dni || '',
     email: inscripto.email || '',
+    celular: inscripto.celular || '',
     tc_pago1: inscripto.tc_pago1 ?? '',
     tc_pago2: inscripto.tc_pago2 ?? '',
     pago1_monto: inscripto.pago1_monto ?? '',
     pago2_monto: inscripto.pago2_monto ?? '',
     pago1_ars_equivalente: inscripto.pago1_ars_equivalente ?? '',
     pago2_ars_equivalente: inscripto.pago2_ars_equivalente ?? '',
+    link_pago1: inscripto.link_pago1 ?? false,
+    link_pago2: inscripto.link_pago2 ?? false,
   } : { ...empty }
 
   const [form, setForm] = useState(init)
@@ -38,14 +41,17 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
       nombre: form.nombre.trim(),
       dni: (form.dni || '').trim() || null,
       email: (form.email || '').trim() || null,
+      celular: (form.celular || '').trim() || null,
       pago1_monto: num(form.pago1_monto),
       pago1_moneda: form.pago1_monto ? form.pago1_moneda : null,
       pago1_ars_equivalente: form.pago1_moneda === 'USD' ? num(form.pago1_ars_equivalente) : null,
       tc_pago1: num(form.tc_pago1),
+      link_pago1: !!form.link_pago1,
       pago2_monto: num(form.pago2_monto),
       pago2_moneda: form.pago2_monto ? form.pago2_moneda : null,
       pago2_ars_equivalente: form.pago2_moneda === 'USD' ? num(form.pago2_ars_equivalente) : null,
       tc_pago2: num(form.tc_pago2),
+      link_pago2: !!form.link_pago2,
       confirmado_adm_pago1: !!form.confirmado_adm_pago1,
       confirmado_adm_pago2: !!form.confirmado_adm_pago2,
       factura_pago1: !!form.factura_pago1,
@@ -77,23 +83,29 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
               <input value={form.dni} onChange={e => set('dni', e.target.value)} placeholder="44447562" />
             </label>
             <label className="field field-grow">
-              <span>Email</span>
-              <input type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="nombre@email.com" />
+              <span>Celular</span>
+              <input value={form.celular} onChange={e => set('celular', e.target.value)} placeholder="+54 11 1234-5678" />
             </label>
           </div>
+          <label className="field">
+            <span>Email</span>
+            <input type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="nombre@email.com" />
+          </label>
 
           <div className="section-label">1° Pago</div>
           <PagoFields
             monto={form.pago1_monto} moneda={form.pago1_moneda}
             equiv={form.pago1_ars_equivalente} tc={form.tc_pago1}
-            onChange={(k, v) => set(k === 'tc' ? 'tc_pago1' : `pago1_${k}`, v)}
+            link={form.link_pago1}
+            onChange={(k, v) => set(k === 'tc' ? 'tc_pago1' : k === 'link' ? 'link_pago1' : `pago1_${k}`, v)}
           />
 
           <div className="section-label">2° Pago</div>
           <PagoFields
             monto={form.pago2_monto} moneda={form.pago2_moneda}
             equiv={form.pago2_ars_equivalente} tc={form.tc_pago2}
-            onChange={(k, v) => set(k === 'tc' ? 'tc_pago2' : `pago2_${k}`, v)}
+            link={form.link_pago2}
+            onChange={(k, v) => set(k === 'tc' ? 'tc_pago2' : k === 'link' ? 'link_pago2' : `pago2_${k}`, v)}
           />
 
           <div className="section-label">Estado</div>
@@ -122,7 +134,7 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
   )
 }
 
-function PagoFields({ monto, moneda, equiv, tc, onChange }) {
+function PagoFields({ monto, moneda, equiv, tc, link, onChange }) {
   return (
     <div className="pago-block">
       <div className="field-row">
@@ -151,6 +163,10 @@ function PagoFields({ monto, moneda, equiv, tc, onChange }) {
           </div>
         </label>
       )}
+      <label className="check-label">
+        <input type="checkbox" checked={!!link} onChange={e => onChange('link', e.target.checked)} className="check" />
+        Pagó con link de pago
+      </label>
     </div>
   )
 }

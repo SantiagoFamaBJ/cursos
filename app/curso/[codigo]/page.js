@@ -24,7 +24,7 @@ export default function CursoDictante({ params }) {
 
       const { data: insc } = await supabase
         .from('inscriptos')
-        .select('nombre, dni, email')
+        .select('nombre, dni, email, celular')
         .eq('curso_id', cursos.id)
         .order('nombre', { ascending: true })
 
@@ -96,6 +96,7 @@ export default function CursoDictante({ params }) {
                 <th>Nombre</th>
                 <th>DNI</th>
                 <th>Email</th>
+                <th>Celular</th>
               </tr>
             </thead>
             <tbody>
@@ -108,6 +109,7 @@ export default function CursoDictante({ params }) {
                     <td><div className="td-nombre">{i.nombre}</div></td>
                     <td>{i.dni || '—'}</td>
                     <td>{i.email || '—'}</td>
+                    <td>{i.celular || '—'}</td>
                   </tr>
                 ))
               )}

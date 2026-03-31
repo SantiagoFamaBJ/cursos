@@ -125,11 +125,18 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
                     <td>
                       <div className="td-nombre">{i.nombre}</div>
                       {i.dni && <div className="td-dni">DNI {i.dni}</div>}
+                      {i.celular && <div className="td-dni">📱 {i.celular}</div>}
                       {i.email && <div className="td-email">{i.email}</div>}
                     </td>
-                    <td>{fmt(i.pago1_monto, i.pago1_moneda, i.pago1_ars_equivalente)}</td>
+                    <td>
+                      <div>{fmt(i.pago1_monto, i.pago1_moneda, i.pago1_ars_equivalente)}</div>
+                      {i.link_pago1 && <span className="badge-link">Link</span>}
+                    </td>
                     <td>{i.tc_pago1 ? `$${Number(i.tc_pago1).toLocaleString('es-AR')}` : '—'}</td>
-                    <td>{fmt(i.pago2_monto, i.pago2_moneda, i.pago2_ars_equivalente)}</td>
+                    <td>
+                      <div>{fmt(i.pago2_monto, i.pago2_moneda, i.pago2_ars_equivalente)}</div>
+                      {i.link_pago2 && <span className="badge-link">Link</span>}
+                    </td>
                     <td>{i.tc_pago2 ? `$${Number(i.tc_pago2).toLocaleString('es-AR')}` : '—'}</td>
                     {COLS.map(c => (
                       <td key={c.key} className="td-check">

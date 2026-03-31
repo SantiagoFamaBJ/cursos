@@ -12,7 +12,7 @@ export default function TodosInscriptos() {
     async function cargar() {
       const { data } = await supabase
         .from('inscriptos')
-        .select('nombre, dni, email, cursos(nombre)')
+        .select('nombre, dni, email, celular, cursos(nombre)')
         .order('nombre', { ascending: true })
       setData(data || [])
       setLoading(false)
@@ -55,6 +55,7 @@ export default function TodosInscriptos() {
                 <th>Nombre</th>
                 <th>DNI</th>
                 <th>Email</th>
+                <th>Celular</th>
                 <th>Curso</th>
                 <th>Cursos</th>
               </tr>
@@ -68,6 +69,7 @@ export default function TodosInscriptos() {
                     <td><div className="td-nombre">{i.nombre}</div></td>
                     <td>{i.dni || '—'}</td>
                     <td>{i.email || '—'}</td>
+                    <td>{i.celular || '—'}</td>
                     <td><div className="td-curso">{i.cursos?.nombre || '—'}</div></td>
                     <td className="td-cursos-count">{conteo[key] || 1}</td>
                   </tr>
