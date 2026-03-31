@@ -76,7 +76,7 @@ export default function CursoDictante({ params }) {
         </div>
       </header>
 
-      <main className="main" style={{maxWidth:'720px'}}>
+      <main className="main" style={{maxWidth:'1000px'}}>
         <div style={{marginBottom:'28px'}}>
           <h1 style={{fontFamily:'Fraunces, serif', fontSize:'26px', fontWeight:'400', color:'var(--text)', marginBottom:'6px'}}>{curso.nombre}</h1>
           {curso.dictante && <p style={{color:'var(--accent)', fontSize:'14px', fontWeight:'500', marginBottom:'4px'}}>{curso.dictante}</p>}
@@ -104,8 +104,8 @@ export default function CursoDictante({ params }) {
                 <th>#</th>
                 <th>Nombre</th>
                 <th>DNI</th>
-                <th>Email</th>
                 <th>Celular</th>
+                <th>Email</th>
               </tr>
             </thead>
             <tbody>
@@ -117,8 +117,8 @@ export default function CursoDictante({ params }) {
                     <td className="td-num">{idx + 1}</td>
                     <td><div className="td-nombre">{i.nombre}</div></td>
                     <td>{i.dni || '—'}</td>
-                    <td>{i.email || '—'}</td>
                     <td>{i.celular || '—'}</td>
+                    <td>{i.email || '—'}</td>
                   </tr>
                 ))
               )}
