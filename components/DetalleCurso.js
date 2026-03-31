@@ -25,6 +25,8 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
   const [buscar, setBuscar] = useState('')
   const [loading, setLoading] = useState(true)
   const [modalInscripto, setModalInscripto] = useState(null)
+  const [sortCol, setSortCol] = useState(null)
+  const [sortAsc, setSortAsc] = useState(false)
 
   useEffect(() => { cargar() }, [curso.id])
 
@@ -50,6 +52,11 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
     setInscriptos(prev => prev.filter(i => i.id !== id))
   }
 
+  function toggleSort(key) {
+    if (sortCol === key) setSortAsc(a => !a)
+    else { setSortCol(key); setSortAsc(false) }
+  }
+
   function exportarCSV() {
     const headers = ['Nombre', 'DNI', 'Email', '1° Pago', 'TC 1°', '2° Pago', 'TC 2°', 'Conf ADM 1°', 'Conf ADM 2°', 'Factura 1°', 'Factura 2°']
     const rows = inscriptos.map(i => [
@@ -69,11 +76,16 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
     a.click()
   }
 
-  const filtrados = inscriptos.filter(i =>
+  const filtrados = [...inscriptos].filter(i =>
     i.nombre?.toLowerCase().includes(buscar.toLowerCase()) ||
     i.dni?.includes(buscar) ||
     i.email?.toLowerCase().includes(buscar.toLowerCase())
-  )
+  ).sort((a, b) => {
+    if (!sortCol) return 0
+    const va = a[sortCol] ? 1 : 0
+    const vb = b[sortCol] ? 1 : 0
+    return sortAsc ? va - vb : vb - va
+  })
 
   return (
     <div className="overlay" onClick={onClose}>
@@ -114,7 +126,11 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
                   <th>TC 1°</th>
                   <th>2° Pago</th>
                   <th>TC 2°</th>
-                  {COLS.map(c => <th key={c.key}>{c.label}</th>)}
+                  {COLS.map(c => (
+                    <th key={c.key} onClick={() => toggleSort(c.key)} style={{cursor:'pointer', userSelect:'none'}}>
+                      {c.label} {sortCol === c.key ? (sortAsc ? '↑' : '↓') : <span style={{opacity:.3}}>↕</span>}
+                    </th>
+                  ))}
                   <th></th>
                 </tr>
               </thead>
