@@ -12,39 +12,49 @@ const empty = {
 }
 
 export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) {
-  const [form, setForm] = useState(inscripto ? { ...inscripto } : { ...empty })
+  const init = inscripto ? {
+    ...inscripto,
+    dni: inscripto.dni || '',
+    email: inscripto.email || '',
+    tc_pago1: inscripto.tc_pago1 ?? '',
+    tc_pago2: inscripto.tc_pago2 ?? '',
+    pago1_monto: inscripto.pago1_monto ?? '',
+    pago2_monto: inscripto.pago2_monto ?? '',
+    pago1_ars_equivalente: inscripto.pago1_ars_equivalente ?? '',
+    pago2_ars_equivalente: inscripto.pago2_ars_equivalente ?? '',
+  } : { ...empty }
+
+  const [form, setForm] = useState(init)
   const [saving, setSaving] = useState(false)
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   async function guardar() {
-    if (!form.nombre.trim()) return alert('El nombre es obligatorio')
+    if (!(form.nombre || '').trim()) return alert('El nombre es obligatorio')
     setSaving(true)
+    const num = v => { const n = parseFloat(v); return isNaN(n) ? null : n }
     const payload = {
       curso_id: cursoId,
       nombre: form.nombre.trim(),
-      dni: form.dni.trim() || null,
-      email: form.email.trim() || null,
-      pago1_monto: form.pago1_monto || null,
+      dni: (form.dni || '').trim() || null,
+      email: (form.email || '').trim() || null,
+      pago1_monto: num(form.pago1_monto),
       pago1_moneda: form.pago1_monto ? form.pago1_moneda : null,
-      pago1_ars_equivalente: form.pago1_moneda === 'USD' ? (form.pago1_ars_equivalente || null) : null,
-      tc_pago1: form.tc_pago1 ? Number(form.tc_pago1) : null,
-      pago2_monto: form.pago2_monto || null,
+      pago1_ars_equivalente: form.pago1_moneda === 'USD' ? num(form.pago1_ars_equivalente) : null,
+      tc_pago1: num(form.tc_pago1),
+      pago2_monto: num(form.pago2_monto),
       pago2_moneda: form.pago2_monto ? form.pago2_moneda : null,
-      pago2_ars_equivalente: form.pago2_moneda === 'USD' ? (form.pago2_ars_equivalente || null) : null,
-      tc_pago2: form.tc_pago2 ? Number(form.tc_pago2) : null,
-      confirmado_adm_pago1: form.confirmado_adm_pago1,
-      confirmado_adm_pago2: form.confirmado_adm_pago2,
-      factura_pago1: form.factura_pago1,
-      factura_pago2: form.factura_pago2,
+      pago2_ars_equivalente: form.pago2_moneda === 'USD' ? num(form.pago2_ars_equivalente) : null,
+      tc_pago2: num(form.tc_pago2),
+      confirmado_adm_pago1: !!form.confirmado_adm_pago1,
+      confirmado_adm_pago2: !!form.confirmado_adm_pago2,
+      factura_pago1: !!form.factura_pago1,
+      factura_pago2: !!form.factura_pago2,
     }
-  if (inscripto) {
-  const { error } = await supabase.from('inscriptos').update(payload).eq('id', inscripto.id)
-  if (error) { console.error(error); alert(error.message); return }
-} else {
-  const { error } = await supabase.from('inscriptos').insert(payload)
-  if (error) { console.error(error); alert(error.message); return }
-}
+    const { error } = inscripto
+      ? await supabase.from('inscriptos').update(payload).eq('id', inscripto.id)
+      : await supabase.from('inscriptos').insert(payload)
+    if (error) { alert('Error: ' + error.message); setSaving(false); return }
     setSaving(false)
     onSave()
   }
@@ -76,14 +86,14 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
           <PagoFields
             monto={form.pago1_monto} moneda={form.pago1_moneda}
             equiv={form.pago1_ars_equivalente} tc={form.tc_pago1}
-            onChange={(k, v) => set(`pago1_${k}`, v)}
+            onChange={(k, v) => set(k === 'tc' ? 'tc_pago1' : `pago1_${k}`, v)}
           />
 
           <div className="section-label">2° Pago</div>
           <PagoFields
             monto={form.pago2_monto} moneda={form.pago2_moneda}
             equiv={form.pago2_ars_equivalente} tc={form.tc_pago2}
-            onChange={(k, v) => set(`pago2_${k}`, v)}
+            onChange={(k, v) => set(k === 'tc' ? 'tc_pago2' : `pago2_${k}`, v)}
           />
 
           <div className="section-label">Estado</div>
@@ -118,7 +128,7 @@ function PagoFields({ monto, moneda, equiv, tc, onChange }) {
       <div className="field-row">
         <label className="field field-grow">
           <span>Monto</span>
-          <input type="number" value={monto} onChange={e => onChange('monto', e.target.value)} placeholder="0" />
+          <input type="text" inputMode="decimal" value={monto} onChange={e => onChange('monto', e.target.value)} placeholder="0" />
         </label>
         <label className="field">
           <span>Moneda</span>
@@ -137,7 +147,7 @@ function PagoFields({ monto, moneda, equiv, tc, onChange }) {
           <span>Equivalente en pesos <em>(para factura)</em></span>
           <div className="input-prefix">
             <span>$</span>
-            <input type="number" value={equiv} onChange={e => onChange('ars_equivalente', e.target.value)} placeholder="215.080" />
+            <input type="text" inputMode="decimal" value={equiv} onChange={e => onChange('ars_equivalente', e.target.value)} placeholder="215.080" />
           </div>
         </label>
       )}
