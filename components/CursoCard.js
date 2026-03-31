@@ -115,12 +115,18 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOn
         {curso.codigo_dictante && (
           <button
             className="btn-ghost btn-sm"
-            onClick={() => {
-              navigator.clipboard.writeText(`${window.location.origin}/curso/${curso.codigo_dictante}`)
-              const btn = document.activeElement
-              const prev = btn.textContent
-              btn.textContent = '✓ Copiado'
-              setTimeout(() => { btn.textContent = prev }, 1500)
+            onClick={(e) => {
+              e.stopPropagation()
+              const url = `${window.location.origin}/curso/${curso.codigo_dictante}`
+              if (navigator.share) {
+                navigator.share({ title: curso.nombre, url })
+              } else {
+                navigator.clipboard.writeText(url)
+                const btn = e.currentTarget
+                const prev = btn.textContent
+                btn.textContent = '✓ Copiado'
+                setTimeout(() => { btn.textContent = prev }, 1500)
+              }
             }}
           >🔗 Link dictante</button>
         )}
