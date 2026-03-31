@@ -182,13 +182,18 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
                     <td>{i.tc_pago2 ? `$${Number(i.tc_pago2).toLocaleString('es-AR')}` : '—'}</td>
                     {COLS.map(c => (
                       <td key={c.key} className="td-check">
-                        <input
-                          type="checkbox"
-                          checked={!!i[c.key]}
-                          onChange={() => !readOnly && toggleCheck(i.id, c.key, i[c.key])}
-                          disabled={readOnly}
-                          className="check"
-                        />
+                        {readOnly ? (
+                          <span style={{color: i[c.key] ? 'var(--success-text)' : 'var(--text-3)', fontSize:'14px'}}>
+                            {i[c.key] ? '✓' : '—'}
+                          </span>
+                        ) : (
+                          <input
+                            type="checkbox"
+                            checked={!!i[c.key]}
+                            onChange={() => toggleCheck(i.id, c.key, i[c.key])}
+                            className="check"
+                          />
+                        )}
                       </td>
                     ))}
                     <td className="td-actions">
