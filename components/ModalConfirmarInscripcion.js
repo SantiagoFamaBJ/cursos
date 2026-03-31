@@ -9,6 +9,7 @@ export default function ModalConfirmarInscripcion({ cursoId, interesado, onClose
     pago2_monto: '', pago2_moneda: 'ARS', pago2_ars_equivalente: '', tc_pago2: '', link_pago2: false,
   })
   const [saving, setSaving] = useState(false)
+  const [pagoUnico, setPagoUnico] = useState(false)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const num = v => { const n = parseFloat(v); return isNaN(n) ? null : n }
 
@@ -57,12 +58,20 @@ export default function ModalConfirmarInscripcion({ cursoId, interesado, onClose
             equiv={form.pago1_ars_equivalente} tc={form.tc_pago1} link={form.link_pago1}
             onChange={(k, v) => set(k === 'tc' ? 'tc_pago1' : k === 'link' ? 'link_pago1' : `pago1_${k}`, v)}
           />
-          <div className="section-label">2° Pago</div>
-          <PagoFields
-            monto={form.pago2_monto} moneda={form.pago2_moneda}
-            equiv={form.pago2_ars_equivalente} tc={form.tc_pago2} link={form.link_pago2}
-            onChange={(k, v) => set(k === 'tc' ? 'tc_pago2' : k === 'link' ? 'link_pago2' : `pago2_${k}`, v)}
-          />
+          <div className="section-label" style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+            <span>2° Pago</span>
+            <label style={{display:'flex', alignItems:'center', gap:'6px', cursor:'pointer', textTransform:'none', letterSpacing:'0', fontSize:'12px', color:'var(--text-2)'}}>
+              <input type="checkbox" checked={pagoUnico} onChange={e => setPagoUnico(e.target.checked)} className="check" />
+              Pago único
+            </label>
+          </div>
+          {!pagoUnico && (
+            <PagoFields
+              monto={form.pago2_monto} moneda={form.pago2_moneda}
+              equiv={form.pago2_ars_equivalente} tc={form.tc_pago2} link={form.link_pago2}
+              onChange={(k, v) => set(k === 'tc' ? 'tc_pago2' : k === 'link' ? 'link_pago2' : `pago2_${k}`, v)}
+            />
+          )}
         </div>
         <div className="modal-footer">
           <button className="btn-ghost" onClick={onClose}>Cancelar</button>

@@ -29,6 +29,7 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
 
   const [form, setForm] = useState(init)
   const [saving, setSaving] = useState(false)
+  const [pagoUnico, setPagoUnico] = useState(false)
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
@@ -100,13 +101,21 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
             onChange={(k, v) => set(k === 'tc' ? 'tc_pago1' : k === 'link' ? 'link_pago1' : `pago1_${k}`, v)}
           />
 
-          <div className="section-label">2° Pago</div>
-          <PagoFields
-            monto={form.pago2_monto} moneda={form.pago2_moneda}
-            equiv={form.pago2_ars_equivalente} tc={form.tc_pago2}
-            link={form.link_pago2}
-            onChange={(k, v) => set(k === 'tc' ? 'tc_pago2' : k === 'link' ? 'link_pago2' : `pago2_${k}`, v)}
-          />
+          <div className="section-label" style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+            <span>2° Pago</span>
+            <label style={{display:'flex', alignItems:'center', gap:'6px', cursor:'pointer', textTransform:'none', letterSpacing:'0', fontSize:'12px', color:'var(--text-2)'}}>
+              <input type="checkbox" checked={pagoUnico} onChange={e => setPagoUnico(e.target.checked)} className="check" />
+              Pago único
+            </label>
+          </div>
+          {!pagoUnico && (
+            <PagoFields
+              monto={form.pago2_monto} moneda={form.pago2_moneda}
+              equiv={form.pago2_ars_equivalente} tc={form.tc_pago2}
+              link={form.link_pago2}
+              onChange={(k, v) => set(k === 'tc' ? 'tc_pago2' : k === 'link' ? 'link_pago2' : `pago2_${k}`, v)}
+            />
+          )}
 
           <div className="section-label">Estado</div>
           <div className="checks-grid">
