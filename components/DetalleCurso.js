@@ -201,10 +201,9 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
               </tbody>
             </table>
           )}
-        </div>
-      </div>
+        </div>}
 
-      {vista === 'interesados' && (
+        {vista === 'interesados' && (
         <div className="table-wrap">
           {interesados.length === 0 ? (
             <div className="empty-state">No hay interesados.</div>
@@ -242,6 +241,8 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
           )}
         </div>
       )}
+
+      </div>
 
       {modalInscripto && (
         <ModalInscripto
