@@ -125,8 +125,8 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
                     <td>
                       <div className="td-nombre">{i.nombre}</div>
                       {i.dni && <div className="td-dni">DNI {i.dni}</div>}
-                      {i.celular && <div className="td-dni">📱 {i.celular}</div>}
-                      {i.email && <div className="td-email">{i.email}</div>}
+                      <div className="td-dni">{i.celular ? <>📱 {i.celular}</> : <span className="td-falta">Falta celular</span>}</div>
+                      <div className="td-email">{i.email || <span className="td-falta">Falta email</span>}</div>
                     </td>
                     <td>
                       <div>{fmt(i.pago1_monto, i.pago1_moneda, i.pago1_ars_equivalente)}</div>
