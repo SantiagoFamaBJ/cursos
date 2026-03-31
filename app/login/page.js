@@ -3,6 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+const ADMIN_PASSWORD = 'dmt123'
+const PANEL_PATH = process.env.NEXT_PUBLIC_SECRET_PANEL_PATH
+
 export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState(false)
@@ -10,9 +13,9 @@ export default function Login() {
 
   function handleSubmit(e) {
     e.preventDefault()
-    if (password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) {
-      document.cookie = `admin_auth=${process.env.NEXT_PUBLIC_ADMIN_PASSWORD}; max-age=${60*60*24*365}; path=/`
-      router.push(`/panel/${process.env.NEXT_PUBLIC_SECRET_PANEL_PATH}`)
+    if (password === ADMIN_PASSWORD) {
+      document.cookie = `admin_auth=${ADMIN_PASSWORD}; max-age=${60*60*24*365}; path=/`
+      router.push(`/panel/${PANEL_PATH}`)
     } else {
       setError(true)
       setPassword('')
