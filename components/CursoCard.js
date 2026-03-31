@@ -3,6 +3,7 @@
 export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOnly, localView }) {
   const inscriptos = curso.inscriptos_data || []
   const count = inscriptos.length || curso.inscriptos?.[0]?.count || 0
+  const interesadosCount = curso.interesados_data?.length || 0
 
   // Countdown
   function getCountdown() {
@@ -76,6 +77,7 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOn
           <div className="card-stat">
             <span className="card-stat-value">{count}</span>
             <span className="card-stat-label">Inscriptos</span>
+            {interesadosCount > 0 && <span className="card-stat-sub">{interesadosCount} interesados</span>}
           </div>
           {localView ? (
             <>

@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import ModalInscripto from './ModalInscripto'
+import ModalInteresado from './ModalInteresado'
+import ModalConfirmarInscripcion from './ModalConfirmarInscripcion'
 
 const COLS = [
   { key: 'confirmado_adm_pago1', label: 'Conf. ADM 1°' },
@@ -27,8 +29,12 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
   const [modalInscripto, setModalInscripto] = useState(null)
   const [sortCol, setSortCol] = useState(null)
   const [sortAsc, setSortAsc] = useState(false)
+  const [vista, setVista] = useState('inscriptos')
+  const [interesados, setInteresados] = useState([])
+  const [modalInteresado, setModalInteresado] = useState(null)
+  const [modalConfirmar, setModalConfirmar] = useState(null)
 
-  useEffect(() => { cargar() }, [curso.id])
+  useEffect(() => { cargar(); cargarInteresados() }, [curso.id])
 
   async function cargar() {
     setLoading(true)
@@ -39,6 +45,21 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
       .order('creado_en', { ascending: true })
     setInscriptos(data || [])
     setLoading(false)
+  }
+
+  async function cargarInteresados() {
+    const { data } = await supabase
+      .from('interesados')
+      .select('*')
+      .eq('curso_id', curso.id)
+      .order('creado_en', { ascending: true })
+    setInteresados(data || [])
+  }
+
+  async function eliminarInteresado(id) {
+    if (!confirm('¿Eliminar este interesado?')) return
+    await supabase.from('interesados').delete().eq('id', id)
+    setInteresados(prev => prev.filter(i => i.id !== id))
   }
 
   async function toggleCheck(id, campo, valor) {
@@ -93,13 +114,18 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
         <div className="modal-header">
           <div>
             <h3>{curso.nombre}</h3>
-            <span className="modal-sub">{inscriptos.length} inscriptos</span>
+            <span className="modal-sub">{inscriptos.length} inscriptos · {interesados.length} interesados</span>
           </div>
           <div className="modal-header-actions">
-            {!readOnly && <button className="btn-ghost" onClick={exportarCSV}>↓ Exportar CSV</button>}
-            {!readOnly && <button className="btn-primary" onClick={() => setModalInscripto('nuevo')}>+ Agregar</button>}
+            {vista === 'inscriptos' && !readOnly && <button className="btn-ghost" onClick={exportarCSV}>↓ Exportar CSV</button>}
+            {vista === 'inscriptos' && !readOnly && <button className="btn-primary" onClick={() => setModalInscripto('nuevo')}>+ Inscripto</button>}
+            {vista === 'interesados' && <button className="btn-primary" onClick={() => setModalInteresado('nuevo')}>+ Interesado</button>}
             <button className="btn-close" onClick={onClose}>✕</button>
           </div>
+        </div>
+        <div style={{padding:'0 26px', borderBottom:'1px solid var(--border)', display:'flex', gap:'4px', flexShrink:0}}>
+          <button className={`tab ${vista === 'inscriptos' ? 'active' : ''}`} onClick={() => setVista('inscriptos')}>Inscriptos ({inscriptos.length})</button>
+          <button className={`tab ${vista === 'interesados' ? 'active' : ''}`} onClick={() => setVista('interesados')}>Interesados ({interesados.length})</button>
         </div>
 
         <div className="modal-search">
@@ -111,7 +137,7 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
           />
         </div>
 
-        <div className="table-wrap">
+        {vista === 'inscriptos' && <div className="table-wrap">
           {loading ? (
             <div className="empty-state">Cargando...</div>
           ) : filtrados.length === 0 ? (
@@ -178,12 +204,69 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
         </div>
       </div>
 
+      {vista === 'interesados' && (
+        <div className="table-wrap">
+          {interesados.length === 0 ? (
+            <div className="empty-state">No hay interesados.</div>
+          ) : (
+            <table className="tabla">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nombre</th>
+                  <th>DNI</th>
+                  <th>Celular</th>
+                  <th>Email</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {interesados.map((i, idx) => (
+                  <tr key={i.id}>
+                    <td className="td-num">{idx + 1}</td>
+                    <td><div className="td-nombre">{i.nombre}</div></td>
+                    <td>{i.dni || '—'}</td>
+                    <td>{i.celular || '—'}</td>
+                    <td>{i.email || '—'}</td>
+                    <td className="td-actions">
+                      <div className="td-actions-inner">
+                        <button className="btn-ghost btn-sm" style={{color:'var(--accent)', borderColor:'var(--accent)'}} onClick={() => setModalConfirmar(i)}>✓ Confirmar</button>
+                        <button className="btn-ghost btn-sm" onClick={() => setModalInteresado(i)}>Editar</button>
+                        <button className="btn-ghost btn-sm btn-danger" onClick={() => eliminarInteresado(i.id)}>✕</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
       {modalInscripto && (
         <ModalInscripto
           cursoId={curso.id}
           inscripto={modalInscripto === 'nuevo' ? null : modalInscripto}
           onClose={() => setModalInscripto(null)}
           onSave={() => { setModalInscripto(null); cargar() }}
+        />
+      )}
+
+      {modalInteresado && (
+        <ModalInteresado
+          cursoId={curso.id}
+          interesado={modalInteresado === 'nuevo' ? null : modalInteresado}
+          onClose={() => setModalInteresado(null)}
+          onSave={() => { setModalInteresado(null); cargarInteresados() }}
+        />
+      )}
+
+      {modalConfirmar && (
+        <ModalConfirmarInscripcion
+          cursoId={curso.id}
+          interesado={modalConfirmar}
+          onClose={() => setModalConfirmar(null)}
+          onSave={() => { setModalConfirmar(null); cargar(); cargarInteresados() }}
         />
       )}
     </div>

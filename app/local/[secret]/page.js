@@ -4,17 +4,19 @@ import { use, useEffect, useState } from 'react'
 import { notFound } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import CursoCard from '@/components/CursoCard'
+import ModalCurso from '@/components/ModalCurso'
 import DetalleCurso from '@/components/DetalleCurso'
 import TodosInscriptos from '@/components/TodosInscriptos'
 import Ranking from '@/components/Ranking'
 
-const SECRET = process.env.NEXT_PUBLIC_LOCAL_PATH
+const SECRET = process.env.NEXT_PUBLIC_SECRET_PANEL_PATH
 
-export default function Local({ params }) {
+export default function Panel({ params }) {
   const { secret } = use(params)
   const [tab, setTab] = useState('cursos')
   const [cursos, setCursos] = useState([])
   const [loading, setLoading] = useState(true)
+  const [modalCurso, setModalCurso] = useState(null)
   const [cursoAbierto, setCursoAbierto] = useState(null)
   const [filtroDictante, setFiltroDictante] = useState('')
 
@@ -26,14 +28,24 @@ export default function Local({ params }) {
     setLoading(true)
     const { data } = await supabase
       .from('cursos')
-      .select('*, inscriptos_data:inscriptos(*)')
+      .select('*, inscriptos_data:inscriptos(*), interesados_data:interesados(*)')
       .order('fecha_desde', { ascending: false })
     setCursos(data || [])
     setLoading(false)
   }
 
+  async function eliminarCurso(id) {
+    if (!confirm('¿Eliminar este curso y todos sus inscriptos?')) return
+    await supabase.from('cursos').delete().eq('id', id)
+    cargarCursos()
+  }
+
+  // Dictantes únicos para el filtro
   const dictantes = [...new Set(cursos.map(c => c.dictante).filter(Boolean))].sort()
-  const cursosFiltrados = filtroDictante ? cursos.filter(c => c.dictante === filtroDictante) : cursos
+
+  const cursosFiltrados = filtroDictante
+    ? cursos.filter(c => c.dictante === filtroDictante)
+    : cursos
 
   return (
     <div className="app">
@@ -44,7 +56,20 @@ export default function Local({ params }) {
             <span className="logo-sep">|</span>
             <span className="logo-label">Cursos</span>
           </div>
-          <span style={{fontSize:'11px', color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'.06em'}}>Solo lectura</span>
+          <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
+            <a
+              href={`/local/${process.env.NEXT_PUBLIC_LOCAL_PATH}`}
+              target="_blank"
+              style={{fontSize:'13px', color:'var(--text-3)', textDecoration:'none', borderBottom:'1px solid var(--border)'}}
+            >
+              Vista local ↗
+            </a>
+            {tab === 'cursos' && (
+              <button className="btn-primary" onClick={() => setModalCurso('nuevo')}>
+                + Nuevo curso
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -59,14 +84,30 @@ export default function Local({ params }) {
           <>
             {dictantes.length > 0 && (
               <div className="filtro-dictante">
-                <button className={`btn-ghost btn-sm ${filtroDictante === '' ? 'active' : ''}`} onClick={() => setFiltroDictante('')}>Todos</button>
+                <button
+                  className={`btn-ghost btn-sm ${filtroDictante === '' ? 'active' : ''}`}
+                  onClick={() => setFiltroDictante('')}
+                >
+                  Todos
+                </button>
                 {dictantes.map(d => (
-                  <button key={d} className={`btn-ghost btn-sm ${filtroDictante === d ? 'active' : ''}`} onClick={() => setFiltroDictante(d)}>{d}</button>
+                  <button
+                    key={d}
+                    className={`btn-ghost btn-sm ${filtroDictante === d ? 'active' : ''}`}
+                    onClick={() => setFiltroDictante(d)}
+                  >
+                    {d}
+                  </button>
                 ))}
               </div>
             )}
             {loading ? (
               <div className="empty-state">Cargando...</div>
+            ) : cursosFiltrados.length === 0 ? (
+              <div className="empty-state">
+                <p>No hay cursos todavía.</p>
+                <button className="btn-primary" onClick={() => setModalCurso('nuevo')}>Crear el primero</button>
+              </div>
             ) : (
               <div className="grid">
                 {cursosFiltrados.map(c => (
@@ -74,25 +115,31 @@ export default function Local({ params }) {
                     key={c.id}
                     curso={c}
                     onAbrir={() => setCursoAbierto(c)}
-                    onEditar={null}
-                    onEliminar={null}
-                    readOnly
-                    localView
+                    onEditar={() => setModalCurso(c)}
+                    onEliminar={() => eliminarCurso(c.id)}
                   />
                 ))}
               </div>
             )}
           </>
         )}
+
         {tab === 'inscriptos' && <TodosInscriptos />}
         {tab === 'ranking' && <Ranking />}
       </main>
 
+      {modalCurso && (
+        <ModalCurso
+          curso={modalCurso === 'nuevo' ? null : modalCurso}
+          onClose={() => setModalCurso(null)}
+          onSave={() => { setModalCurso(null); cargarCursos() }}
+        />
+      )}
+
       {cursoAbierto && (
         <DetalleCurso
           curso={cursoAbierto}
-          onClose={() => setCursoAbierto(null)}
-          readOnly
+          onClose={() => { setCursoAbierto(null); cargarCursos() }}
         />
       )}
     </div>
