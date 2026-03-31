@@ -105,12 +105,27 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOn
           )}
         </div>
       </div>
-      {!readOnly && (
-        <div className="card-actions" onClick={e => e.stopPropagation()}>
-          <button className="btn-ghost btn-sm" onClick={onEditar}>Editar</button>
-          <button className="btn-ghost btn-sm btn-danger" onClick={onEliminar}>Eliminar</button>
-        </div>
-      )}
+      <div className="card-actions" onClick={e => e.stopPropagation()}>
+        {curso.codigo_dictante && (
+          <button
+            className="btn-ghost btn-sm"
+            title="Copiar link dictante"
+            onClick={() => {
+              navigator.clipboard.writeText(`${window.location.origin}/curso/${curso.codigo_dictante}`)
+              const btn = document.activeElement
+              const prev = btn.textContent
+              btn.textContent = '✓ Copiado'
+              setTimeout(() => { btn.textContent = prev }, 1500)
+            }}
+          >🔗 Link dictante</button>
+        )}
+        {!readOnly && (
+          <>
+            <button className="btn-ghost btn-sm" onClick={onEditar}>Editar</button>
+            <button className="btn-ghost btn-sm btn-danger" onClick={onEliminar}>Eliminar</button>
+          </>
+        )}
+      </div>
     </div>
   )
 }

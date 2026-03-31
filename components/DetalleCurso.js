@@ -140,7 +140,7 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
                     <td className="td-num">{idx + 1}</td>
                     <td>
                       <div className="td-nombre">{i.nombre}</div>
-                      {i.dni && <div className="td-dni">DNI {i.dni}</div>}
+                      <div className="td-dni">{i.dni ? <>DNI {i.dni}</> : <span className="td-falta">Falta DNI</span>}</div>
                       <div className="td-dni">{i.celular ? <>📱 {i.celular}</> : <span className="td-falta">Falta celular</span>}</div>
                       <div className="td-email">{i.email || <span className="td-falta">Falta email</span>}</div>
                     </td>

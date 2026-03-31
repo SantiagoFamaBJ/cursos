@@ -56,11 +56,20 @@ export default function Panel({ params }) {
             <span className="logo-sep">|</span>
             <span className="logo-label">Cursos</span>
           </div>
-          {tab === 'cursos' && (
-            <button className="btn-primary" onClick={() => setModalCurso('nuevo')}>
-              + Nuevo curso
-            </button>
-          )}
+          <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
+            <a
+              href={`/local/${process.env.NEXT_PUBLIC_LOCAL_PATH}`}
+              target="_blank"
+              style={{fontSize:'13px', color:'var(--text-3)', textDecoration:'none', borderBottom:'1px solid var(--border)'}}
+            >
+              Vista local ↗
+            </a>
+            {tab === 'cursos' && (
+              <button className="btn-primary" onClick={() => setModalCurso('nuevo')}>
+                + Nuevo curso
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
