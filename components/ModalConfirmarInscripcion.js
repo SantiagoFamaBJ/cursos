@@ -9,7 +9,7 @@ export default function ModalConfirmarInscripcion({ cursoId, interesado, onClose
     pago2_monto: '', pago2_moneda: 'ARS', pago2_ars_equivalente: '', tc_pago2: '', link_pago2: false,
   })
   const [saving, setSaving] = useState(false)
-  const [pagoUnico, setPagoUnico] = useState(false)
+  const [pagoUnico, setPagoUnico] = useState(false)  // new inscripto, always starts false
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const num = v => { const n = parseFloat(v); return isNaN(n) ? null : n }
 
@@ -27,11 +27,12 @@ export default function ModalConfirmarInscripcion({ cursoId, interesado, onClose
       pago1_ars_equivalente: form.pago1_moneda === 'USD' ? num(form.pago1_ars_equivalente) : null,
       tc_pago1: num(form.tc_pago1),
       link_pago1: !!form.link_pago1,
-      pago2_monto: num(form.pago2_monto),
-      pago2_moneda: form.pago2_monto ? form.pago2_moneda : null,
-      pago2_ars_equivalente: form.pago2_moneda === 'USD' ? num(form.pago2_ars_equivalente) : null,
-      tc_pago2: num(form.tc_pago2),
-      link_pago2: !!form.link_pago2,
+      pago_unico: !!pagoUnico,
+      pago2_monto: pagoUnico ? null : num(form.pago2_monto),
+      pago2_moneda: pagoUnico ? null : (form.pago2_monto ? form.pago2_moneda : null),
+      pago2_ars_equivalente: pagoUnico ? null : (form.pago2_moneda === 'USD' ? num(form.pago2_ars_equivalente) : null),
+      tc_pago2: pagoUnico ? null : num(form.tc_pago2),
+      link_pago2: pagoUnico ? false : !!form.link_pago2,
     }
     const { error } = await supabase.from('inscriptos').insert(payload)
     if (error) { alert('Error: ' + error.message); setSaving(false); return }

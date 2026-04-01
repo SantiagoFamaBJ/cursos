@@ -40,7 +40,7 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOn
       const p1 = i.pago1_moneda === 'USD' ? (i.pago1_ars_equivalente || 0) : (i.pago1_monto || 0)
       const p2 = i.pago2_moneda === 'USD' ? (i.pago2_ars_equivalente || 0) : (i.pago2_monto || 0)
       total += Number(p1) + Number(p2)
-      if (!i.pago2_monto) pendientes++
+      if (!i.pago2_monto && !i.pago_unico) pendientes++
       if (i.confirmado_adm_pago1 && !i.factura_pago1) factura1Pend++
       if (i.confirmado_adm_pago2 && !i.factura_pago2) factura2Pend++
     })
