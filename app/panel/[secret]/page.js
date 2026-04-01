@@ -8,6 +8,7 @@ import ModalCurso from '@/components/ModalCurso'
 import DetalleCurso from '@/components/DetalleCurso'
 import TodosInscriptos from '@/components/TodosInscriptos'
 import Ranking from '@/components/Ranking'
+import Control from '@/components/Control'
 
 const SECRET = process.env.NEXT_PUBLIC_SECRET_PANEL_PATH
 
@@ -99,6 +100,7 @@ export default function Panel({ params }) {
           <button className={`tab ${tab === 'cursos' ? 'active' : ''}`} onClick={() => setTab('cursos')}>Cursos</button>
           <button className={`tab ${tab === 'inscriptos' ? 'active' : ''}`} onClick={() => setTab('inscriptos')}>Todos los inscriptos</button>
           <button className={`tab ${tab === 'ranking' ? 'active' : ''}`} onClick={() => setTab('ranking')}>Ranking</button>
+          <button className={`tab ${tab === 'control' ? 'active' : ''}`} onClick={() => setTab('control')}>Control</button>
         </div>
 
         {tab === 'cursos' && (
@@ -147,6 +149,7 @@ export default function Panel({ params }) {
 
         {tab === 'inscriptos' && <TodosInscriptos />}
         {tab === 'ranking' && <Ranking />}
+        {tab === 'control' && <Control />}
       </main>
 
       {modalCurso && (

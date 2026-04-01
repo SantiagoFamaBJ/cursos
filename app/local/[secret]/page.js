@@ -5,8 +5,6 @@ import { notFound } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import CursoCard from '@/components/CursoCard'
 import DetalleCurso from '@/components/DetalleCurso'
-import TodosInscriptos from '@/components/TodosInscriptos'
-import Ranking from '@/components/Ranking'
 
 const SECRET = process.env.NEXT_PUBLIC_LOCAL_PATH
 
@@ -72,8 +70,6 @@ export default function Local({ params }) {
       <main className="main">
         <div className="tabs">
           <button className={`tab ${tab === 'cursos' ? 'active' : ''}`} onClick={() => setTab('cursos')}>Cursos</button>
-          <button className={`tab ${tab === 'inscriptos' ? 'active' : ''}`} onClick={() => setTab('inscriptos')}>Todos los inscriptos</button>
-          <button className={`tab ${tab === 'ranking' ? 'active' : ''}`} onClick={() => setTab('ranking')}>Ranking</button>
         </div>
 
         {tab === 'cursos' && (
@@ -105,8 +101,6 @@ export default function Local({ params }) {
             )}
           </>
         )}
-        {tab === 'inscriptos' && <TodosInscriptos />}
-        {tab === 'ranking' && <Ranking />}
       </main>
 
       {cursoAbierto && (
