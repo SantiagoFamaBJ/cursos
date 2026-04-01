@@ -29,7 +29,7 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
 
   const [form, setForm] = useState(init)
   const [saving, setSaving] = useState(false)
-  const [pagoUnico, setPagoUnico] = useState(false)
+  const [pagoUnico, setPagoUnico] = useState(!!(inscripto && !inscripto.pago2_monto))
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
@@ -48,11 +48,11 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
       pago1_ars_equivalente: form.pago1_moneda === 'USD' ? num(form.pago1_ars_equivalente) : null,
       tc_pago1: num(form.tc_pago1),
       link_pago1: !!form.link_pago1,
-      pago2_monto: num(form.pago2_monto),
-      pago2_moneda: form.pago2_monto ? form.pago2_moneda : null,
-      pago2_ars_equivalente: form.pago2_moneda === 'USD' ? num(form.pago2_ars_equivalente) : null,
-      tc_pago2: num(form.tc_pago2),
-      link_pago2: !!form.link_pago2,
+      pago2_monto: pagoUnico ? null : num(form.pago2_monto),
+      pago2_moneda: pagoUnico ? null : (form.pago2_monto ? form.pago2_moneda : null),
+      pago2_ars_equivalente: pagoUnico ? null : (form.pago2_moneda === 'USD' ? num(form.pago2_ars_equivalente) : null),
+      tc_pago2: pagoUnico ? null : num(form.tc_pago2),
+      link_pago2: pagoUnico ? false : !!form.link_pago2,
       confirmado_adm_pago1: !!form.confirmado_adm_pago1,
       confirmado_adm_pago2: !!form.confirmado_adm_pago2,
       factura_pago1: !!form.factura_pago1,
