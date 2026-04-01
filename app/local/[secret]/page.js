@@ -4,6 +4,7 @@ import { use, useEffect, useState } from 'react'
 import { notFound } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import CursoCard from '@/components/CursoCard'
+import Control from '@/components/Control'
 import DetalleCurso from '@/components/DetalleCurso'
 
 const SECRET = process.env.NEXT_PUBLIC_LOCAL_PATH
@@ -70,6 +71,7 @@ export default function Local({ params }) {
       <main className="main">
         <div className="tabs">
           <button className={`tab ${tab === 'cursos' ? 'active' : ''}`} onClick={() => setTab('cursos')}>Cursos</button>
+          <button className={`tab ${tab === 'control' ? 'active' : ''}`} onClick={() => setTab('control')}>Control</button>
         </div>
 
         {tab === 'cursos' && (
@@ -101,6 +103,7 @@ export default function Local({ params }) {
             )}
           </>
         )}
+        {tab === 'control' && <Control />}
       </main>
 
       {cursoAbierto && (

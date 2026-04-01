@@ -18,7 +18,7 @@ export default function Control() {
 
       const { data: inscData } = await supabase
         .from('inscriptos')
-        .select('nombre, curso_id, confirmado_adm_pago1, factura_pago1')
+        .select('nombre, curso_id, confirmado_adm_pago1, factura_pago1, link_pago1')
         .in('curso_id', cursosData.map(c => c.id))
 
       // Por cada curso, filtrar inscriptos con algo pendiente en el 1° pago
@@ -30,6 +30,7 @@ export default function Control() {
             nombre: i.nombre,
             faltaConf: !i.confirmado_adm_pago1,
             faltaFactura: !i.factura_pago1,
+            linkPago: !!i.link_pago1,
           }))
       })).filter(c => c.pendientes.length > 0)
 
@@ -68,7 +69,10 @@ export default function Control() {
                 padding: '10px 14px', background: 'var(--surface)',
                 border: '1px solid var(--border)', borderRadius: '8px'
               }}>
-                <span style={{fontWeight: '500', fontSize: '14px', color: 'var(--text)'}}>{p.nombre}</span>
+                <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                  <span style={{fontWeight: '500', fontSize: '14px', color: 'var(--text)'}}>{p.nombre}</span>
+                  {p.linkPago && <span className="badge-link">Link</span>}
+                </div>
                 <div style={{display: 'flex', gap: '6px'}}>
                   {p.faltaConf && (
                     <span style={{
