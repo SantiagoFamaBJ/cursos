@@ -24,14 +24,18 @@ export default function Control() {
       const resultado = cursosData.map(c => ({
         ...c,
         pendientes: (inscData || [])
-          .filter(i => i.curso_id === c.id && (!i.confirmado_adm_pago1 || !i.factura_pago1))
+          .filter(i => {
+            if (i.curso_id !== c.id) return false
+            // Falta conf ADM 1° O factura 1°
+            return !i.confirmado_adm_pago1 || !i.factura_pago1
+          })
           .map(i => ({
             nombre: i.nombre,
             faltaConf: !i.confirmado_adm_pago1,
             faltaFactura: !i.factura_pago1,
             linkPago: !!i.link_pago1,
             pagoUnico: !!i.pago_unico,
-            cantPagos: i.cantidad_pagos || 2,
+            cantPagos: i.cantidad_pagos ?? 2,
           }))
       })).filter(c => c.pendientes.length > 0)
 
