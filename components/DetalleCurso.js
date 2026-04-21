@@ -9,8 +9,10 @@ import ModalConfirmarInscripcion from './ModalConfirmarInscripcion'
 const COLS = [
   { key: 'confirmado_adm_pago1', label: 'Conf. ADM 1°' },
   { key: 'confirmado_adm_pago2', label: 'Conf. ADM 2°' },
+  { key: 'confirmado_adm_pago3', label: 'Conf. ADM 3°' },
   { key: 'factura_pago1', label: 'Factura 1°' },
   { key: 'factura_pago2', label: 'Factura 2°' },
+  { key: 'factura_pago3', label: 'Factura 3°' },
 ]
 
 function fmt(monto, moneda, equiv) {
@@ -49,8 +51,7 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
 
   async function cargarInteresados() {
     const { data } = await supabase
-      .from('interesados')
-      .select('*')
+      .from('interesados').select('*')
       .eq('curso_id', curso.id)
       .order('creado_en', { ascending: true })
     setInteresados(data || [])
@@ -79,15 +80,19 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
   }
 
   function exportarCSV() {
-    const headers = ['Nombre', 'DNI', 'Email', '1° Pago', 'TC 1°', '2° Pago', 'TC 2°', 'Conf ADM 1°', 'Conf ADM 2°', 'Factura 1°', 'Factura 2°']
+    const headers = ['Nombre', 'DNI', 'Celular', 'Email', 'Pagos', '1° Pago', 'TC 1°', '2° Pago', 'TC 2°', '3° Pago', 'TC 3°', 'Conf ADM 1°', 'Conf ADM 2°', 'Conf ADM 3°', 'Factura 1°', 'Factura 2°', 'Factura 3°']
     const rows = inscriptos.map(i => [
-      i.nombre, i.dni || '', i.email || '',
+      i.nombre, i.dni || '', i.celular || '', i.email || '',
+      i.cantidad_pagos || 2,
       fmt(i.pago1_monto, i.pago1_moneda, i.pago1_ars_equivalente), i.tc_pago1 || '',
       fmt(i.pago2_monto, i.pago2_moneda, i.pago2_ars_equivalente), i.tc_pago2 || '',
+      fmt(i.pago3_monto, i.pago3_moneda, i.pago3_ars_equivalente), i.tc_pago3 || '',
       i.confirmado_adm_pago1 ? 'Sí' : 'No',
       i.confirmado_adm_pago2 ? 'Sí' : 'No',
+      i.confirmado_adm_pago3 ? 'Sí' : 'No',
       i.factura_pago1 ? 'Sí' : 'No',
       i.factura_pago2 ? 'Sí' : 'No',
+      i.factura_pago3 ? 'Sí' : 'No',
     ])
     const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n')
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
@@ -108,6 +113,10 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
     return sortAsc ? va - vb : vb - va
   })
 
+  // Only show pago3 col if any inscripto has 3 pagos
+  const hasPago3 = inscriptos.some(i => (i.cantidad_pagos || 2) >= 3)
+  const visibleCols = hasPago3 ? COLS : COLS.filter(c => !c.key.includes('pago3'))
+
   return (
     <div className="overlay" onClick={onClose}>
       <div className="modal modal-xl" onClick={e => e.stopPropagation()}>
@@ -117,7 +126,7 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
             <span className="modal-sub">{inscriptos.length} inscriptos{!readOnly && ` · ${interesados.length} interesados`}</span>
           </div>
           <div className="modal-header-actions">
-            {vista === 'inscriptos' && !readOnly && <button className="btn-ghost" onClick={exportarCSV}>↓ Exportar CSV</button>}
+            {vista === 'inscriptos' && !readOnly && <button className="btn-ghost" onClick={exportarCSV}>↓ CSV</button>}
             {vista === 'inscriptos' && !readOnly && <button className="btn-primary" onClick={() => setModalInscripto('nuevo')}>+ Inscripto</button>}
             {vista === 'interesados' && <button className="btn-primary" onClick={() => setModalInteresado('nuevo')}>+ Interesado</button>}
             <button className="btn-close" onClick={onClose}>✕</button>
@@ -129,12 +138,7 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
         </div>
 
         <div className="modal-search">
-          <input
-            placeholder="Buscar por nombre, DNI o email..."
-            value={buscar}
-            onChange={e => setBuscar(e.target.value)}
-            className="search-input"
-          />
+          <input placeholder="Buscar por nombre, DNI o email..." value={buscar} onChange={e => setBuscar(e.target.value)} className="search-input" />
         </div>
 
         {vista === 'inscriptos' && <div className="table-wrap">
@@ -152,7 +156,9 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
                   <th>TC 1°</th>
                   <th>2° Pago</th>
                   <th>TC 2°</th>
-                  {COLS.map(c => (
+                  {hasPago3 && <th>3° Pago</th>}
+                  {hasPago3 && <th>TC 3°</th>}
+                  {visibleCols.map(c => (
                     <th key={c.key} onClick={() => toggleSort(c.key)} style={{cursor:'pointer', userSelect:'none'}}>
                       {c.label} {sortCol === c.key ? (sortAsc ? '↑' : '↓') : <span style={{opacity:.3}}>↕</span>}
                     </th>
@@ -169,6 +175,8 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
                       <div className="td-dni">{i.dni ? <>DNI {i.dni}</> : <span className="td-falta">Falta DNI</span>}</div>
                       <div className="td-dni">{i.celular ? <>📱 {i.celular}</> : <span className="td-falta">Falta celular</span>}</div>
                       <div className="td-email">{i.email || <span className="td-falta">Falta email</span>}</div>
+                      {i.pago_unico && <span style={{fontSize:'10px',color:'var(--accent)',fontWeight:500}}>Pago único</span>}
+                      {(i.cantidad_pagos||2) === 3 && <span style={{fontSize:'10px',color:'var(--text-3)'}}>3 pagos</span>}
                     </td>
                     <td>
                       <div>{fmt(i.pago1_monto, i.pago1_moneda, i.pago1_ars_equivalente)}</div>
@@ -180,19 +188,19 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
                       {i.link_pago2 && <span className="badge-link">Link</span>}
                     </td>
                     <td>{i.tc_pago2 ? `$${Number(i.tc_pago2).toLocaleString('es-AR')}` : '—'}</td>
-                    {COLS.map(c => (
+                    {hasPago3 && <td>
+                      <div>{fmt(i.pago3_monto, i.pago3_moneda, i.pago3_ars_equivalente)}</div>
+                      {i.link_pago3 && <span className="badge-link">Link</span>}
+                    </td>}
+                    {hasPago3 && <td>{i.tc_pago3 ? `$${Number(i.tc_pago3).toLocaleString('es-AR')}` : '—'}</td>}
+                    {visibleCols.map(c => (
                       <td key={c.key} className="td-check">
                         {readOnly ? (
                           <span style={{color: i[c.key] ? 'var(--success-text)' : 'var(--text-3)', fontSize:'14px'}}>
                             {i[c.key] ? '✓' : '—'}
                           </span>
                         ) : (
-                          <input
-                            type="checkbox"
-                            checked={!!i[c.key]}
-                            onChange={() => toggleCheck(i.id, c.key, i[c.key])}
-                            className="check"
-                          />
+                          <input type="checkbox" checked={!!i[c.key]} onChange={() => toggleCheck(i.id, c.key, i[c.key])} className="check" />
                         )}
                       </td>
                     ))}
@@ -210,43 +218,38 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
         </div>}
 
         {vista === 'interesados' && (
-        <div className="table-wrap">
-          {interesados.length === 0 ? (
-            <div className="empty-state">No hay interesados.</div>
-          ) : (
-            <table className="tabla">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Nombre</th>
-                  <th>DNI</th>
-                  <th>Celular</th>
-                  <th>Email</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {interesados.map((i, idx) => (
-                  <tr key={i.id}>
-                    <td className="td-num">{idx + 1}</td>
-                    <td><div className="td-nombre">{i.nombre}</div></td>
-                    <td>{i.dni || '—'}</td>
-                    <td>{i.celular || '—'}</td>
-                    <td>{i.email || '—'}</td>
-                    <td className="td-actions">
-                      <div className="td-actions-inner">
-                        <button className="btn-ghost btn-sm" style={{color:'var(--accent)', borderColor:'var(--accent)'}} onClick={() => setModalConfirmar(i)}>✓ Confirmar</button>
-                        <button className="btn-ghost btn-sm" onClick={() => setModalInteresado(i)}>Editar</button>
-                        <button className="btn-ghost btn-sm btn-danger" onClick={() => eliminarInteresado(i.id)}>✕</button>
-                      </div>
-                    </td>
+          <div className="table-wrap">
+            {interesados.length === 0 ? (
+              <div className="empty-state">No hay interesados.</div>
+            ) : (
+              <table className="tabla">
+                <thead>
+                  <tr>
+                    <th>#</th><th>Nombre</th><th>DNI</th><th>Celular</th><th>Email</th><th></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
+                </thead>
+                <tbody>
+                  {interesados.map((i, idx) => (
+                    <tr key={i.id}>
+                      <td className="td-num">{idx + 1}</td>
+                      <td><div className="td-nombre">{i.nombre}</div></td>
+                      <td>{i.dni || '—'}</td>
+                      <td>{i.celular || '—'}</td>
+                      <td>{i.email || '—'}</td>
+                      <td className="td-actions">
+                        <div className="td-actions-inner">
+                          <button className="btn-ghost btn-sm" style={{color:'var(--accent)', borderColor:'var(--accent)'}} onClick={() => setModalConfirmar(i)}>✓ Confirmar</button>
+                          <button className="btn-ghost btn-sm" onClick={() => setModalInteresado(i)}>Editar</button>
+                          <button className="btn-ghost btn-sm btn-danger" onClick={() => eliminarInteresado(i.id)}>✕</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
 
       </div>
 
@@ -258,7 +261,6 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
           onSave={() => { setModalInscripto(null); cargar() }}
         />
       )}
-
       {modalInteresado && (
         <ModalInteresado
           cursoId={curso.id}
@@ -267,7 +269,6 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
           onSave={() => { setModalInteresado(null); cargarInteresados() }}
         />
       )}
-
       {modalConfirmar && (
         <ModalConfirmarInscripcion
           cursoId={curso.id}

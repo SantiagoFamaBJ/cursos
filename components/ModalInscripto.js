@@ -5,10 +5,13 @@ import { supabase } from '@/lib/supabase'
 
 const empty = {
   nombre: '', dni: '', email: '', celular: '',
+  cantidad_pagos: 2,
   pago1_monto: '', pago1_moneda: 'ARS', pago1_ars_equivalente: '', tc_pago1: '', link_pago1: false,
   pago2_monto: '', pago2_moneda: 'ARS', pago2_ars_equivalente: '', tc_pago2: '', link_pago2: false,
-  confirmado_adm_pago1: false, confirmado_adm_pago2: false,
-  factura_pago1: false, factura_pago2: false,
+  pago3_monto: '', pago3_moneda: 'ARS', pago3_ars_equivalente: '', tc_pago3: '', link_pago3: false,
+  confirmado_adm_pago1: false, confirmado_adm_pago2: false, confirmado_adm_pago3: false,
+  factura_pago1: false, factura_pago2: false, factura_pago3: false,
+  pago_unico: false,
 }
 
 export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) {
@@ -17,47 +20,61 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
     dni: inscripto.dni || '',
     email: inscripto.email || '',
     celular: inscripto.celular || '',
+    cantidad_pagos: inscripto.cantidad_pagos || 2,
     tc_pago1: inscripto.tc_pago1 ?? '',
     tc_pago2: inscripto.tc_pago2 ?? '',
+    tc_pago3: inscripto.tc_pago3 ?? '',
     pago1_monto: inscripto.pago1_monto ?? '',
     pago2_monto: inscripto.pago2_monto ?? '',
+    pago3_monto: inscripto.pago3_monto ?? '',
     pago1_ars_equivalente: inscripto.pago1_ars_equivalente ?? '',
     pago2_ars_equivalente: inscripto.pago2_ars_equivalente ?? '',
+    pago3_ars_equivalente: inscripto.pago3_ars_equivalente ?? '',
     link_pago1: inscripto.link_pago1 ?? false,
     link_pago2: inscripto.link_pago2 ?? false,
+    link_pago3: inscripto.link_pago3 ?? false,
+    pago_unico: inscripto.pago_unico ?? false,
   } : { ...empty }
 
   const [form, setForm] = useState(init)
   const [saving, setSaving] = useState(false)
-  const [pagoUnico, setPagoUnico] = useState(!!(inscripto?.pago_unico))
-
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+  const num = v => { const n = parseFloat(v); return isNaN(n) ? null : n }
+
+  const cantPagos = form.pago_unico ? 1 : form.cantidad_pagos
 
   async function guardar() {
     if (!(form.nombre || '').trim()) return alert('El nombre es obligatorio')
     setSaving(true)
-    const num = v => { const n = parseFloat(v); return isNaN(n) ? null : n }
     const payload = {
       curso_id: cursoId,
       nombre: form.nombre.trim(),
       dni: (form.dni || '').trim() || null,
       email: (form.email || '').trim() || null,
       celular: (form.celular || '').trim() || null,
+      cantidad_pagos: cantPagos,
+      pago_unico: !!form.pago_unico,
       pago1_monto: num(form.pago1_monto),
       pago1_moneda: form.pago1_monto ? form.pago1_moneda : null,
       pago1_ars_equivalente: form.pago1_moneda === 'USD' ? num(form.pago1_ars_equivalente) : null,
       tc_pago1: num(form.tc_pago1),
       link_pago1: !!form.link_pago1,
-      pago_unico: !!pagoUnico,
-      pago2_monto: pagoUnico ? null : num(form.pago2_monto),
-      pago2_moneda: pagoUnico ? null : (form.pago2_monto ? form.pago2_moneda : null),
-      pago2_ars_equivalente: pagoUnico ? null : (form.pago2_moneda === 'USD' ? num(form.pago2_ars_equivalente) : null),
-      tc_pago2: pagoUnico ? null : num(form.tc_pago2),
-      link_pago2: pagoUnico ? false : !!form.link_pago2,
       confirmado_adm_pago1: !!form.confirmado_adm_pago1,
-      confirmado_adm_pago2: !!form.confirmado_adm_pago2,
       factura_pago1: !!form.factura_pago1,
-      factura_pago2: !!form.factura_pago2,
+      pago2_monto: cantPagos >= 2 ? num(form.pago2_monto) : null,
+      pago2_moneda: cantPagos >= 2 && form.pago2_monto ? form.pago2_moneda : null,
+      pago2_ars_equivalente: cantPagos >= 2 && form.pago2_moneda === 'USD' ? num(form.pago2_ars_equivalente) : null,
+      tc_pago2: cantPagos >= 2 ? num(form.tc_pago2) : null,
+      link_pago2: cantPagos >= 2 ? !!form.link_pago2 : false,
+      confirmado_adm_pago2: cantPagos >= 2 ? !!form.confirmado_adm_pago2 : false,
+      factura_pago2: cantPagos >= 2 ? !!form.factura_pago2 : false,
+      pago3_monto: cantPagos >= 3 ? num(form.pago3_monto) : null,
+      pago3_moneda: cantPagos >= 3 && form.pago3_monto ? form.pago3_moneda : null,
+      pago3_ars_equivalente: cantPagos >= 3 && form.pago3_moneda === 'USD' ? num(form.pago3_ars_equivalente) : null,
+      tc_pago3: cantPagos >= 3 ? num(form.tc_pago3) : null,
+      link_pago3: cantPagos >= 3 ? !!form.link_pago3 : false,
+      confirmado_adm_pago3: cantPagos >= 3 ? !!form.confirmado_adm_pago3 : false,
+      factura_pago3: cantPagos >= 3 ? !!form.factura_pago3 : false,
     }
     const { error } = inscripto
       ? await supabase.from('inscriptos').update(payload).eq('id', inscripto.id)
@@ -94,43 +111,53 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
             <input type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="nombre@email.com" />
           </label>
 
+          <div className="section-label">Modalidad de pago</div>
+          <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
+            {[1,2,3].map(n => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => { set('cantidad_pagos', n); if (n === 1) set('pago_unico', true); else set('pago_unico', false) }}
+                className={`btn-ghost btn-sm ${cantPagos === n ? 'active' : ''}`}
+              >
+                {n === 1 ? 'Pago único' : n === 2 ? '2 pagos' : '3 pagos'}
+              </button>
+            ))}
+          </div>
+
           <div className="section-label">1° Pago</div>
           <PagoFields
             monto={form.pago1_monto} moneda={form.pago1_moneda}
-            equiv={form.pago1_ars_equivalente} tc={form.tc_pago1}
-            link={form.link_pago1}
+            equiv={form.pago1_ars_equivalente} tc={form.tc_pago1} link={form.link_pago1}
             onChange={(k, v) => set(k === 'tc' ? 'tc_pago1' : k === 'link' ? 'link_pago1' : `pago1_${k}`, v)}
           />
 
-          <div className="section-label" style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
-            <span>2° Pago</span>
-            <label style={{display:'flex', alignItems:'center', gap:'6px', cursor:'pointer', textTransform:'none', letterSpacing:'0', fontSize:'12px', color:'var(--text-2)'}}>
-              <input type="checkbox" checked={pagoUnico} onChange={e => setPagoUnico(e.target.checked)} className="check" />
-              Pago único
-            </label>
-          </div>
-          {!pagoUnico && (
+          {cantPagos >= 2 && <>
+            <div className="section-label">2° Pago</div>
             <PagoFields
               monto={form.pago2_monto} moneda={form.pago2_moneda}
-              equiv={form.pago2_ars_equivalente} tc={form.tc_pago2}
-              link={form.link_pago2}
+              equiv={form.pago2_ars_equivalente} tc={form.tc_pago2} link={form.link_pago2}
               onChange={(k, v) => set(k === 'tc' ? 'tc_pago2' : k === 'link' ? 'link_pago2' : `pago2_${k}`, v)}
             />
-          )}
+          </>}
+
+          {cantPagos >= 3 && <>
+            <div className="section-label">3° Pago</div>
+            <PagoFields
+              monto={form.pago3_monto} moneda={form.pago3_moneda}
+              equiv={form.pago3_ars_equivalente} tc={form.tc_pago3} link={form.link_pago3}
+              onChange={(k, v) => set(k === 'tc' ? 'tc_pago3' : k === 'link' ? 'link_pago3' : `pago3_${k}`, v)}
+            />
+          </>}
 
           <div className="section-label">Estado</div>
           <div className="checks-grid">
-            {[
-              ['confirmado_adm_pago1', 'Confirmado ADM 1°'],
-              ['confirmado_adm_pago2', 'Confirmado ADM 2°'],
-              ['factura_pago1', 'Factura 1°'],
-              ['factura_pago2', 'Factura 2°'],
-            ].map(([k, label]) => (
-              <label key={k} className="check-label">
-                <input type="checkbox" checked={!!form[k]} onChange={e => set(k, e.target.checked)} className="check" />
-                {label}
-              </label>
-            ))}
+            <label className="check-label"><input type="checkbox" checked={!!form.confirmado_adm_pago1} onChange={e => set('confirmado_adm_pago1', e.target.checked)} className="check" />Conf. ADM 1°</label>
+            {cantPagos >= 2 && <label className="check-label"><input type="checkbox" checked={!!form.confirmado_adm_pago2} onChange={e => set('confirmado_adm_pago2', e.target.checked)} className="check" />Conf. ADM 2°</label>}
+            {cantPagos >= 3 && <label className="check-label"><input type="checkbox" checked={!!form.confirmado_adm_pago3} onChange={e => set('confirmado_adm_pago3', e.target.checked)} className="check" />Conf. ADM 3°</label>}
+            <label className="check-label"><input type="checkbox" checked={!!form.factura_pago1} onChange={e => set('factura_pago1', e.target.checked)} className="check" />Factura 1°</label>
+            {cantPagos >= 2 && <label className="check-label"><input type="checkbox" checked={!!form.factura_pago2} onChange={e => set('factura_pago2', e.target.checked)} className="check" />Factura 2°</label>}
+            {cantPagos >= 3 && <label className="check-label"><input type="checkbox" checked={!!form.factura_pago3} onChange={e => set('factura_pago3', e.target.checked)} className="check" />Factura 3°</label>}
           </div>
         </div>
         <div className="modal-footer">

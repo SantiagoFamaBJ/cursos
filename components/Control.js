@@ -18,10 +18,9 @@ export default function Control() {
 
       const { data: inscData } = await supabase
         .from('inscriptos')
-        .select('nombre, curso_id, confirmado_adm_pago1, factura_pago1, link_pago1')
+        .select('nombre, curso_id, confirmado_adm_pago1, factura_pago1, link_pago1, cantidad_pagos, pago_unico')
         .in('curso_id', cursosData.map(c => c.id))
 
-      // Por cada curso, filtrar inscriptos con algo pendiente en el 1° pago
       const resultado = cursosData.map(c => ({
         ...c,
         pendientes: (inscData || [])
@@ -31,6 +30,8 @@ export default function Control() {
             faltaConf: !i.confirmado_adm_pago1,
             faltaFactura: !i.factura_pago1,
             linkPago: !!i.link_pago1,
+            pagoUnico: !!i.pago_unico,
+            cantPagos: i.cantidad_pagos || 2,
           }))
       })).filter(c => c.pendientes.length > 0)
 
@@ -72,19 +73,15 @@ export default function Control() {
                 <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
                   <span style={{fontWeight: '500', fontSize: '14px', color: 'var(--text)'}}>{p.nombre}</span>
                   {p.linkPago && <span className="badge-link">Link</span>}
+                  {p.pagoUnico && <span style={{fontSize:'10px', color:'var(--accent)', fontWeight:500}}>Pago único</span>}
+                  {p.cantPagos === 3 && <span style={{fontSize:'10px', color:'var(--text-3)'}}>3 pagos</span>}
                 </div>
                 <div style={{display: 'flex', gap: '6px'}}>
                   {p.faltaConf && (
-                    <span style={{
-                      fontSize: '11px', fontWeight: '500', padding: '2px 8px',
-                      borderRadius: '20px', background: 'var(--warning-bg)', color: 'var(--warning-text)'
-                    }}>Conf. ADM</span>
+                    <span style={{fontSize: '11px', fontWeight: '500', padding: '2px 8px', borderRadius: '20px', background: 'var(--warning-bg)', color: 'var(--warning-text)'}}>Conf. ADM</span>
                   )}
                   {p.faltaFactura && (
-                    <span style={{
-                      fontSize: '11px', fontWeight: '500', padding: '2px 8px',
-                      borderRadius: '20px', background: 'var(--danger-bg)', color: 'var(--danger-text)'
-                    }}>Factura</span>
+                    <span style={{fontSize: '11px', fontWeight: '500', padding: '2px 8px', borderRadius: '20px', background: 'var(--danger-bg)', color: 'var(--danger-text)'}}>Factura</span>
                   )}
                 </div>
               </div>
