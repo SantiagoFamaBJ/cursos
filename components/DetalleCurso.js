@@ -102,6 +102,20 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
     a.click()
   }
 
+  function exportarPunteo() {
+    const lineas = inscriptos.map((i, idx) => {
+      const nombre = i.nombre || ''
+      const dni = i.dni ? ` | DNI ${i.dni}` : ''
+      return `• ${nombre}${dni}`
+    })
+    const texto = `${curso.nombre}\n${'-'.repeat(40)}\n${lineas.join('\n')}`
+    const blob = new Blob([texto], { type: 'text/plain;charset=utf-8;' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `${curso.nombre.replace(/\s+/g, '_')}_punteo.txt`
+    a.click()
+  }
+
   const filtrados = [...inscriptos].filter(i =>
     i.nombre?.toLowerCase().includes(buscar.toLowerCase()) ||
     i.dni?.includes(buscar) ||
@@ -127,6 +141,7 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
           </div>
           <div className="modal-header-actions">
             {vista === 'inscriptos' && !readOnly && <button className="btn-ghost" onClick={exportarCSV}>↓ CSV</button>}
+            {vista === 'inscriptos' && !readOnly && <button className="btn-ghost" onClick={exportarPunteo}>↓ Punteo</button>}
             {vista === 'inscriptos' && !readOnly && <button className="btn-primary" onClick={() => setModalInscripto('nuevo')}>+ Inscripto</button>}
             {vista === 'interesados' && <button className="btn-primary" onClick={() => setModalInteresado('nuevo')}>+ Interesado</button>}
             <button className="btn-close" onClick={onClose}>✕</button>
