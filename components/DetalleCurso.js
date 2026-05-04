@@ -102,20 +102,6 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
     a.click()
   }
 
-  function exportarPunteo() {
-    const lineas = inscriptos.map((i, idx) => {
-      const nombre = i.nombre || ''
-      const dni = i.dni ? ` | DNI ${i.dni}` : ''
-      return `• ${nombre}${dni}`
-    })
-    const texto = `${curso.nombre}\n${'-'.repeat(40)}\n${lineas.join('\n')}`
-    const blob = new Blob([texto], { type: 'text/plain;charset=utf-8;' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = `${curso.nombre.replace(/\s+/g, '_')}_punteo.txt`
-    a.click()
-  }
-
   const filtrados = [...inscriptos].filter(i =>
     i.nombre?.toLowerCase().includes(buscar.toLowerCase()) ||
     i.dni?.includes(buscar) ||
@@ -141,7 +127,6 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
           </div>
           <div className="modal-header-actions">
             {vista === 'inscriptos' && !readOnly && <button className="btn-ghost" onClick={exportarCSV}>↓ CSV</button>}
-            {vista === 'inscriptos' && !readOnly && <button className="btn-ghost" onClick={exportarPunteo}>↓ Punteo</button>}
             {vista === 'inscriptos' && !readOnly && <button className="btn-primary" onClick={() => setModalInscripto('nuevo')}>+ Inscripto</button>}
             {vista === 'interesados' && <button className="btn-primary" onClick={() => setModalInteresado('nuevo')}>+ Interesado</button>}
             <button className="btn-close" onClick={onClose}>✕</button>
@@ -183,7 +168,7 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
               </thead>
               <tbody>
                 {filtrados.map((i, idx) => (
-                  <tr key={i.id}>
+                  <tr key={i.id} style={i.estado === 'baja' ? {opacity:.5, textDecoration:'line-through'} : {}}>
                     <td className="td-num">{idx + 1}</td>
                     <td>
                       <div className="td-nombre">{i.nombre}</div>
@@ -191,6 +176,7 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
                       <div className="td-dni">{i.celular ? <>📱 {i.celular}</> : <span className="td-falta">Falta celular</span>}</div>
                       <div className="td-email">{i.email || <span className="td-falta">Falta email</span>}</div>
                       {i.pago_unico && <span style={{fontSize:'10px',color:'var(--accent)',fontWeight:500}}>Pago único</span>}
+                      {i.estado === 'baja' && <span style={{fontSize:'10px',color:'var(--danger)',fontWeight:500}}>⚠ Baja</span>}
                       {(i.cantidad_pagos||2) === 3 && <span style={{fontSize:'10px',color:'var(--text-3)'}}>3 pagos</span>}
                     </td>
                     <td>
@@ -245,7 +231,7 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
                 </thead>
                 <tbody>
                   {interesados.map((i, idx) => (
-                    <tr key={i.id}>
+                    <tr key={i.id} style={i.estado === 'baja' ? {opacity:.5, textDecoration:'line-through'} : {}}>
                       <td className="td-num">{idx + 1}</td>
                       <td><div className="td-nombre">{i.nombre}</div></td>
                       <td>{i.dni || '—'}</td>

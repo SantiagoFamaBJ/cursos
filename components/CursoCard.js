@@ -2,7 +2,8 @@
 
 export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOnly, localView }) {
   const inscriptos = curso.inscriptos_data || []
-  const count = inscriptos.length || curso.inscriptos?.[0]?.count || 0
+  const activos = inscriptos.filter(i => i.estado !== 'baja')
+  const count = activos.length || curso.inscriptos?.[0]?.count || 0
   const interesadosCount = curso.interesados_data?.length || 0
 
   function getCountdown() {
@@ -36,7 +37,7 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOn
 
   function calcFinanciero() {
     let total = 0, pendientes = 0, factura1Pend = 0, factura2Pend = 0
-    inscriptos.forEach(i => {
+    activos.forEach(i => {
       const p1 = i.pago1_moneda === 'USD' ? (i.pago1_ars_equivalente || 0) : (i.pago1_monto || 0)
       const p2 = i.pago2_moneda === 'USD' ? (i.pago2_ars_equivalente || 0) : (i.pago2_monto || 0)
       const p3 = i.pago3_moneda === 'USD' ? (i.pago3_ars_equivalente || 0) : (i.pago3_monto || 0)

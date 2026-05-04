@@ -12,6 +12,7 @@ const empty = {
   confirmado_adm_pago1: false, confirmado_adm_pago2: false, confirmado_adm_pago3: false,
   factura_pago1: false, factura_pago2: false, factura_pago3: false,
   pago_unico: false,
+  estado: 'activo',
 }
 
 export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) {
@@ -34,6 +35,7 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
     link_pago2: inscripto.link_pago2 ?? false,
     link_pago3: inscripto.link_pago3 ?? false,
     pago_unico: inscripto.pago_unico ?? false,
+    estado: inscripto.estado || 'activo',
   } : { ...empty }
 
   const [form, setForm] = useState(init)
@@ -54,6 +56,7 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
       celular: (form.celular || '').trim() || null,
       cantidad_pagos: cantPagos,
       pago_unico: !!form.pago_unico,
+      estado: form.estado || 'activo',
       pago1_monto: num(form.pago1_monto),
       pago1_moneda: form.pago1_monto ? form.pago1_moneda : null,
       pago1_ars_equivalente: form.pago1_moneda === 'USD' ? num(form.pago1_ars_equivalente) : null,
@@ -117,10 +120,25 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
               <button
                 key={n}
                 type="button"
-                onClick={() => { set('cantidad_pagos', n); if (n === 1) set('pago_unico', true); else set('pago_unico', false) }}
+                onClick={() => setForm(f => ({ ...f, cantidad_pagos: n, pago_unico: n === 1 }))}
                 className={`btn-ghost btn-sm ${cantPagos === n ? 'active' : ''}`}
               >
                 {n === 1 ? 'Pago único' : n === 2 ? '2 pagos' : '3 pagos'}
+              </button>
+            ))}
+          </div>
+
+          <div className="section-label">Estado del inscripto</div>
+          <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
+            {[['activo','Activo'],['baja','Baja (seña sin reembolso)']].map(([val, label]) => (
+              <button
+                key={val}
+                type="button"
+                onClick={() => set('estado', val)}
+                className={`btn-ghost btn-sm ${form.estado === val ? 'active' : ''}`}
+                style={val === 'baja' ? {color: form.estado === 'baja' ? 'var(--danger)' : undefined, borderColor: form.estado === 'baja' ? 'var(--danger)' : undefined} : {}}
+              >
+                {label}
               </button>
             ))}
           </div>
