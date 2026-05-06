@@ -18,7 +18,7 @@ export default function Control() {
 
       const { data: inscData } = await supabase
         .from('inscriptos')
-        .select('nombre, curso_id, confirmado_adm_pago1, factura_pago1, link_pago1, cantidad_pagos, pago_unico, pago1_monto, estado')
+        .select('nombre, curso_id, confirmado_adm_pago1, factura_pago1, confirmado_adm_pago2, factura_pago2, confirmado_adm_pago3, factura_pago3, link_pago1, link_pago2, link_pago3, cantidad_pagos, pago_unico, pago1_monto, pago2_monto, pago3_monto, estado')
         .in('curso_id', cursosData.map(c => c.id))
 
       const resultado = cursosData.map(c => ({
@@ -27,19 +27,31 @@ export default function Control() {
           .filter(i => {
             if (i.curso_id !== c.id) return false
             if (i.estado === 'baja') return false
-            // Solo si pagó algo el 1° pago
-            if (!i.pago1_monto) return false
-            // Falta conf ADM 1° O factura 1°
-            return !i.confirmado_adm_pago1 || !i.factura_pago1
+            const cant = i.cantidad_pagos ?? 2
+            const tienePago = i.pago1_monto || i.pago2_monto || i.pago3_monto
+            if (!tienePago) return false
+            const falta1 = i.pago1_monto && (!i.confirmado_adm_pago1 || !i.factura_pago1)
+            const falta2 = cant >= 2 && i.pago2_monto && (!i.confirmado_adm_pago2 || !i.factura_pago2)
+            const falta3 = cant >= 3 && i.pago3_monto && (!i.confirmado_adm_pago3 || !i.factura_pago3)
+            return falta1 || falta2 || falta3
           })
-          .map(i => ({
-            nombre: i.nombre,
-            faltaConf: !i.confirmado_adm_pago1,
-            faltaFactura: !i.factura_pago1,
-            linkPago: !!i.link_pago1,
-            pagoUnico: !!i.pago_unico,
-            cantPagos: i.cantidad_pagos ?? 2,
-          }))
+          .map(i => {
+            const cant = i.cantidad_pagos ?? 2
+            const pendientes = []
+            if (i.pago1_monto && !i.confirmado_adm_pago1) pendientes.push('Conf. ADM 1°')
+            if (i.pago1_monto && !i.factura_pago1) pendientes.push('Factura 1°')
+            if (cant >= 2 && i.pago2_monto && !i.confirmado_adm_pago2) pendientes.push('Conf. ADM 2°')
+            if (cant >= 2 && i.pago2_monto && !i.factura_pago2) pendientes.push('Factura 2°')
+            if (cant >= 3 && i.pago3_monto && !i.confirmado_adm_pago3) pendientes.push('Conf. ADM 3°')
+            if (cant >= 3 && i.pago3_monto && !i.factura_pago3) pendientes.push('Factura 3°')
+            return {
+              nombre: i.nombre,
+              pendientes,
+              linkPago: !!(i.link_pago1 || i.link_pago2 || i.link_pago3),
+              pagoUnico: !!i.pago_unico,
+              cantPagos: cant,
+            }
+          })
       })).filter(c => c.pendientes.length > 0)
 
       setCursos(resultado)
@@ -83,13 +95,14 @@ export default function Control() {
                   {p.pagoUnico && <span style={{fontSize:'10px', color:'var(--accent)', fontWeight:500}}>Pago único</span>}
                   {p.cantPagos === 3 && <span style={{fontSize:'10px', color:'var(--text-3)'}}>3 pagos</span>}
                 </div>
-                <div style={{display: 'flex', gap: '6px'}}>
-                  {p.faltaConf && (
-                    <span style={{fontSize: '11px', fontWeight: '500', padding: '2px 8px', borderRadius: '20px', background: 'var(--warning-bg)', color: 'var(--warning-text)'}}>Conf. ADM</span>
-                  )}
-                  {p.faltaFactura && (
-                    <span style={{fontSize: '11px', fontWeight: '500', padding: '2px 8px', borderRadius: '20px', background: 'var(--danger-bg)', color: 'var(--danger-text)'}}>Factura</span>
-                  )}
+                <div style={{display: 'flex', gap: '4px', flexWrap:'wrap', justifyContent:'flex-end'}}>
+                  {p.pendientes.map((item, j) => (
+                    <span key={j} style={{fontSize: '11px', fontWeight: '500', padding: '2px 8px', borderRadius: '20px',
+                      background: item.includes('Conf') ? 'var(--warning-bg)' : 'var(--danger-bg)',
+                      color: item.includes('Conf') ? 'var(--warning-text)' : 'var(--danger-text)'}}>
+                      {item}
+                    </span>
+                  ))}
                 </div>
               </div>
             ))}

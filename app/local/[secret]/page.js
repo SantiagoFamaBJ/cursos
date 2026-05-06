@@ -111,6 +111,7 @@ export default function Local({ params }) {
           curso={cursoAbierto}
           onClose={() => setCursoAbierto(null)}
           readOnly
+          hideBajas
         />
       )}
     </div>

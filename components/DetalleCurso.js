@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import ModalInscripto from './ModalInscripto'
 import ModalInteresado from './ModalInteresado'
@@ -24,7 +24,7 @@ function fmt(monto, moneda, equiv) {
   return `$${Number(monto).toLocaleString('es-AR')}`
 }
 
-export default function DetalleCurso({ curso, onClose, readOnly }) {
+export default function DetalleCurso({ curso, onClose, readOnly, hideBajas }) {
   const [inscriptos, setInscriptos] = useState([])
   const [buscar, setBuscar] = useState('')
   const [loading, setLoading] = useState(true)
@@ -35,6 +35,30 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
   const [interesados, setInteresados] = useState([])
   const [modalInteresado, setModalInteresado] = useState(null)
   const [modalConfirmar, setModalConfirmar] = useState(null)
+  const [colWidths, setColWidths] = useState({})
+  const resizing = useRef(null)
+
+  const startResize = useCallback((e, colKey) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const startWidth = resizing.current?.startWidth || e.currentTarget.parentElement.offsetWidth
+    resizing.current = { colKey, startX, startWidth }
+
+    function onMove(e) {
+      if (!resizing.current) return
+      const diff = e.clientX - resizing.current.startX
+      const newWidth = Math.max(60, resizing.current.startWidth + diff)
+      setColWidths(prev => ({ ...prev, [resizing.current.colKey]: newWidth }))
+    }
+    function onUp() {
+      resizing.current = null
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    resizing.current.startWidth = startWidth
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }, [])
 
   useEffect(() => { cargar(); cargarInteresados() }, [curso.id])
 
@@ -158,7 +182,7 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
         <div style={{padding:'0 26px', borderBottom:'1px solid var(--border)', display:'flex', gap:'4px', flexShrink:0}}>
           <button className={`tab ${vista === 'inscriptos' ? 'active' : ''}`} onClick={() => setVista('inscriptos')}>Inscriptos ({inscriptos.filter(i=>i.estado!=='baja').length})</button>
           {!readOnly && <button className={`tab ${vista === 'interesados' ? 'active' : ''}`} onClick={() => setVista('interesados')}>Interesados ({interesados.length})</button>}
-          <button className={`tab ${vista === 'bajas' ? 'active' : ''}`} style={{color: inscriptos.filter(i=>i.estado==='baja').length > 0 ? 'var(--danger)' : undefined}} onClick={() => setVista('bajas')}>Bajas ({inscriptos.filter(i=>i.estado==='baja').length})</button>
+          {!hideBajas && <button className={`tab ${vista === 'bajas' ? 'active' : ''}`} style={{color: inscriptos.filter(i=>i.estado==='baja').length > 0 ? 'var(--danger)' : undefined}} onClick={() => setVista('bajas')}>Bajas ({inscriptos.filter(i=>i.estado==='baja').length})</button>}
         </div>
 
         <div className="modal-search">
@@ -174,19 +198,17 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
             <table className="tabla">
               <thead>
                 <tr>
-                  <th className="resizable">#</th>
-                  <th className="resizable">Participante</th>
-                  <th className="resizable" style={{cursor:'pointer',userSelect:'none'}} onClick={() => toggleSort('pago1_monto')}>1° Pago {sortCol==='pago1_monto'?(sortAsc?'↑':'↓'):<span style={{opacity:.3}}>↕</span>}</th>
-                  <th className="resizable">TC 1°</th>
-                  <th className="resizable" style={{cursor:'pointer',userSelect:'none'}} onClick={() => toggleSort('pago2_monto')}>2° Pago {sortCol==='pago2_monto'?(sortAsc?'↑':'↓'):<span style={{opacity:.3}}>↕</span>}</th>
-                  <th className="resizable">TC 2°</th>
-                  {hasPago3 && <th className="resizable" style={{cursor:'pointer',userSelect:'none'}} onClick={() => toggleSort('pago3_monto')}>3° Pago {sortCol==='pago3_monto'?(sortAsc?'↑':'↓'):<span style={{opacity:.3}}>↕</span>}</th>}
-                  {hasPago3 && <th className="resizable">TC 3°</th>}
-                  <th className="resizable" style={{cursor:'pointer',userSelect:'none',background:'rgba(232,97,26,.12)',color:'var(--accent)'}} onClick={() => toggleSort('restante_usd')}>Restante USD {sortCol==='restante_usd'?(sortAsc?'↑':'↓'):<span style={{opacity:.3}}>↕</span>}</th>
+                  <RH label="#" colKey="num" width={colWidths['num']} onResize={startResize} />
+                  <RH label="Participante" colKey="part" width={colWidths['part']} onResize={startResize} />
+                  <RH label={<span style={{cursor:'pointer'}} onClick={() => toggleSort('pago1_monto')}>1° Pago {sortCol==='pago1_monto'?(sortAsc?'↑':'↓'):<span style={{opacity:.3}}>↕</span>}</span>} colKey="p1" width={colWidths['p1']} onResize={startResize} />
+                  <RH label="TC 1°" colKey="tc1" width={colWidths['tc1']} onResize={startResize} />
+                  <RH label={<span style={{cursor:'pointer'}} onClick={() => toggleSort('pago2_monto')}>2° Pago {sortCol==='pago2_monto'?(sortAsc?'↑':'↓'):<span style={{opacity:.3}}>↕</span>}</span>} colKey="p2" width={colWidths['p2']} onResize={startResize} />
+                  <RH label="TC 2°" colKey="tc2" width={colWidths['tc2']} onResize={startResize} />
+                  {hasPago3 && <RH label={<span style={{cursor:'pointer'}} onClick={() => toggleSort('pago3_monto')}>3° Pago {sortCol==='pago3_monto'?(sortAsc?'↑':'↓'):<span style={{opacity:.3}}>↕</span>}</span>} colKey="p3" width={colWidths['p3']} onResize={startResize} />}
+                  {hasPago3 && <RH label="TC 3°" colKey="tc3" width={colWidths['tc3']} onResize={startResize} />}
+                  <RH label={<span style={{cursor:'pointer',color:'var(--accent)'}} onClick={() => toggleSort('restante_usd')}>Restante USD {sortCol==='restante_usd'?(sortAsc?'↑':'↓'):<span style={{opacity:.3}}>↕</span>}</span>} colKey="rest" width={colWidths['rest']} onResize={startResize} thStyle={{background:'rgba(232,97,26,.12)'}} />
                   {visibleCols.map(c => (
-                    <th key={c.key} className="resizable" onClick={() => toggleSort(c.key)} style={{cursor:'pointer', userSelect:'none'}}>
-                      {c.label} {sortCol === c.key ? (sortAsc ? '↑' : '↓') : <span style={{opacity:.3}}>↕</span>}
-                    </th>
+                    <RH key={c.key} label={<span style={{cursor:'pointer'}} onClick={() => toggleSort(c.key)}>{c.label} {sortCol===c.key?(sortAsc?'↑':'↓'):<span style={{opacity:.3}}>↕</span>}</span>} colKey={c.key} width={colWidths[c.key]} onResize={startResize} />
                   ))}
                   <th></th>
                 </tr>
@@ -371,5 +393,23 @@ function NotaBaja({ inscripto, onUpdate }) {
       </span>
       <span style={{fontSize:'10px', color:'var(--text-3)'}}>✎</span>
     </div>
+  )
+}
+
+function RH({ label, colKey, width, onResize, thStyle }) {
+  return (
+    <th style={{ position:'relative', width: width ? `${width}px` : undefined, minWidth:'60px', userSelect:'none', ...thStyle }}>
+      {label}
+      <span
+        onMouseDown={e => onResize(e, colKey)}
+        style={{
+          position:'absolute', right:0, top:0, bottom:0, width:'5px',
+          cursor:'col-resize', background:'transparent',
+          borderRight:'2px solid transparent',
+        }}
+        onMouseEnter={e => e.currentTarget.style.borderRightColor = 'var(--accent)'}
+        onMouseLeave={e => e.currentTarget.style.borderRightColor = 'transparent'}
+      />
+    </th>
   )
 }
