@@ -184,6 +184,7 @@ export default function DetalleCurso({ curso, onClose, readOnly, hideBajas }) {
                   {hasPago3 && <th style={{cursor:'pointer'}} onClick={() => toggleSort('pago3_monto')}>3° Pago {sortCol==='pago3_monto'?(sortAsc?'↑':'↓'):<span style={{opacity:.3}}>↕</span>}</th>}
                   {hasPago3 && <th>TC 3°</th>}
                   <th style={{cursor:'pointer',background:'rgba(232,97,26,.12)',color:'var(--accent)'}} onClick={() => toggleSort('restante_usd')}>Restante USD {sortCol==='restante_usd'?(sortAsc?'↑':'↓'):<span style={{opacity:.3}}>↕</span>}</th>
+                  <th style={{background:'rgba(94,200,122,.08)',color:'var(--success-text)'}}>✓ Saldado</th>
                   {visibleCols.map(c => (
                     <th key={c.key} style={{cursor:'pointer'}} onClick={() => toggleSort(c.key)}>
                       {c.label} {sortCol===c.key?(sortAsc?'↑':'↓'):<span style={{opacity:.3}}>↕</span>}
@@ -194,7 +195,7 @@ export default function DetalleCurso({ curso, onClose, readOnly, hideBajas }) {
               </thead>
               <tbody>
                 {filtrados.map((i, idx) => (
-                  <tr key={i.id}>
+                  <tr key={i.id} style={i.saldado ? {background:'rgba(94,200,122,.04)'} : {}}>
                     <td className="td-num">{idx + 1}</td>
                     <td>
                       <div className="td-nombre">{i.nombre}</div>
@@ -219,7 +220,18 @@ export default function DetalleCurso({ curso, onClose, readOnly, hideBajas }) {
                       {i.link_pago3 && <span className="badge-link">Link</span>}
                     </td>}
                     {hasPago3 && <td>{i.tc_pago3 ? `$${Number(i.tc_pago3).toLocaleString('es-AR')}` : '—'}</td>}
-                    <td style={{background:'rgba(232,97,26,.08)',fontWeight:500,color:i.restante_usd?'var(--accent)':'var(--text-3)'}}>{i.restante_usd ? `USD ${i.restante_usd}` : '—'}</td>
+                    <td style={{background:'rgba(232,97,26,.08)'}}>
+                      {readOnly
+                        ? <span style={{fontWeight:500,color:i.restante_usd?'var(--accent)':'var(--text-3)'}}>{i.restante_usd ? `USD ${i.restante_usd}` : '—'}</span>
+                        : <RestanteEdit inscripto={i} onUpdate={(id, val) => setInscriptos(prev => prev.map(x => x.id === id ? {...x, restante_usd: val} : x))} />
+                      }
+                    </td>
+                    <td style={{background: i.saldado ? 'rgba(94,200,122,.08)' : undefined, textAlign:'center'}}>
+                      {readOnly
+                        ? <span style={{color: i.saldado ? 'var(--success-text)' : 'var(--text-3)', fontSize:'14px'}}>{i.saldado ? '✓' : '—'}</span>
+                        : <input type="checkbox" checked={!!i.saldado} onChange={() => toggleCheck(i.id, 'saldado', i.saldado)} className="check" />
+                      }
+                    </td>
                     {visibleCols.map(c => (
                       <td key={c.key} className="td-check">
                         {readOnly ? (
@@ -255,7 +267,7 @@ export default function DetalleCurso({ curso, onClose, readOnly, hideBajas }) {
                 </thead>
                 <tbody>
                   {bajas.map((i, idx) => (
-                    <tr key={i.id}>
+                    <tr key={i.id} style={i.saldado ? {background:'rgba(94,200,122,.04)'} : {}}>
                       <td className="td-num">{idx + 1}</td>
                       <td>
                         <div className="td-nombre">{i.nombre}</div>
@@ -285,7 +297,7 @@ export default function DetalleCurso({ curso, onClose, readOnly, hideBajas }) {
                 </thead>
                 <tbody>
                   {interesados.map((i, idx) => (
-                    <tr key={i.id}>
+                    <tr key={i.id} style={i.saldado ? {background:'rgba(94,200,122,.04)'} : {}}>
                       <td className="td-num">{idx + 1}</td>
                       <td><div className="td-nombre">{i.nombre}</div></td>
                       <td>{i.dni || '—'}</td>
@@ -369,6 +381,47 @@ function NotaBaja({ inscripto, onUpdate }) {
     <div style={{display:'flex', gap:'6px', alignItems:'center', cursor:'pointer'}} onClick={() => setEditing(true)}>
       <span style={{fontSize:'12px', color: nota ? 'var(--text-2)' : 'var(--text-3)', fontStyle: nota ? 'normal' : 'italic'}}>
         {nota || 'Agregar nota...'}
+      </span>
+      <span style={{fontSize:'10px', color:'var(--text-3)'}}>✎</span>
+    </div>
+  )
+}
+
+function RestanteEdit({ inscripto, onUpdate }) {
+  const [editing, setEditing] = useState(false)
+  const [val, setVal] = useState(inscripto.restante_usd ?? '')
+  const [saving, setSaving] = useState(false)
+
+  async function guardar() {
+    setSaving(true)
+    const { supabase } = await import('@/lib/supabase')
+    const num = parseFloat(val)
+    const newVal = isNaN(num) ? null : num
+    await supabase.from('inscriptos').update({ restante_usd: newVal }).eq('id', inscripto.id)
+    onUpdate(inscripto.id, newVal)
+    setSaving(false)
+    setEditing(false)
+  }
+
+  if (editing) return (
+    <div style={{display:'flex', gap:'4px', alignItems:'center'}}>
+      <input
+        value={val}
+        onChange={e => setVal(e.target.value)}
+        type="text" inputMode="decimal"
+        style={{fontSize:'12px', padding:'3px 6px', background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:'4px', color:'var(--text)', outline:'none', width:'80px'}}
+        autoFocus
+        onKeyDown={e => e.key === 'Enter' && guardar()}
+      />
+      <button className="btn-ghost btn-sm" onClick={guardar} disabled={saving}>{saving?'...':'✓'}</button>
+      <button className="btn-ghost btn-sm btn-danger" onClick={() => { setVal(inscripto.restante_usd ?? ''); setEditing(false) }}>✕</button>
+    </div>
+  )
+
+  return (
+    <div style={{display:'flex', gap:'4px', alignItems:'center', cursor:'pointer'}} onClick={() => setEditing(true)}>
+      <span style={{fontWeight:500, color: val !== '' && val !== null ? 'var(--accent)' : 'var(--text-3)'}}>
+        {val !== '' && val !== null ? `USD ${val}` : '—'}
       </span>
       <span style={{fontSize:'10px', color:'var(--text-3)'}}>✎</span>
     </div>

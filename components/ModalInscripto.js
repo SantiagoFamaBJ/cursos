@@ -14,6 +14,7 @@ const empty = {
   pago_unico: false,
   estado: 'activo',
   restante_usd: '',
+  saldado: false,
 }
 
 export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) {
@@ -38,6 +39,7 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
     pago_unico: inscripto.pago_unico ?? false,
     estado: inscripto.estado || 'activo',
     restante_usd: inscripto.restante_usd ?? '',
+    saldado: inscripto.saldado ?? false,
   } : { ...empty }
 
   const [form, setForm] = useState(init)
@@ -60,6 +62,7 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
       pago_unico: !!form.pago_unico,
       estado: form.estado || 'activo',
       restante_usd: num(form.restante_usd),
+      saldado: !!form.saldado,
       pago1_monto: num(form.pago1_monto),
       pago1_moneda: form.pago1_monto ? form.pago1_moneda : null,
       pago1_ars_equivalente: form.pago1_moneda === 'USD' ? num(form.pago1_ars_equivalente) : null,
@@ -149,6 +152,11 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
           <label className="field">
             <span>Restante USD</span>
             <input type="text" inputMode="decimal" value={form.restante_usd} onChange={e => set('restante_usd', e.target.value)} placeholder="0" />
+          </label>
+
+          <label className="check-label" style={{marginTop:'-4px'}}>
+            <input type="checkbox" checked={!!form.saldado} onChange={e => set('saldado', e.target.checked)} className="check" />
+            <span style={{fontSize:'13px', color: form.saldado ? 'var(--success-text)' : undefined}}>✓ Curso saldado</span>
           </label>
 
           <div className="section-label">1° Pago</div>
