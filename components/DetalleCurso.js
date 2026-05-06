@@ -156,7 +156,7 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
           </div>
         </div>
         <div style={{padding:'0 26px', borderBottom:'1px solid var(--border)', display:'flex', gap:'4px', flexShrink:0}}>
-          <button className={`tab ${vista === 'inscriptos' ? 'active' : ''}`} onClick={() => setVista('inscriptos')}>Inscriptos ({inscriptos.length})</button>
+          <button className={`tab ${vista === 'inscriptos' ? 'active' : ''}`} onClick={() => setVista('inscriptos')}>Inscriptos ({inscriptos.filter(i=>i.estado!=='baja').length})</button>
           {!readOnly && <button className={`tab ${vista === 'interesados' ? 'active' : ''}`} onClick={() => setVista('interesados')}>Interesados ({interesados.length})</button>}
           <button className={`tab ${vista === 'bajas' ? 'active' : ''}`} style={{color: inscriptos.filter(i=>i.estado==='baja').length > 0 ? 'var(--danger)' : undefined}} onClick={() => setVista('bajas')}>Bajas ({inscriptos.filter(i=>i.estado==='baja').length})</button>
         </div>
@@ -250,7 +250,7 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
             ) : (
               <table className="tabla">
                 <thead>
-                  <tr><th className="resizable">#</th><th className="resizable">Participante</th><th>1° Pago (seña)</th><th>TC</th></tr>
+                  <tr><th className="resizable">#</th><th className="resizable">Participante</th><th>1° Pago (seña)</th><th>TC</th><th style={{minWidth:'200px'}}>Nota</th></tr>
                 </thead>
                 <tbody>
                   {bajas.map((i, idx) => (
@@ -262,6 +262,7 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
                       </td>
                       <td>{fmt(i.pago1_monto, i.pago1_moneda, i.pago1_ars_equivalente)}</td>
                       <td>{i.tc_pago1 ? `$${Number(i.tc_pago1).toLocaleString('es-AR')}` : '—'}</td>
+                      <td><NotaBaja inscripto={i} onUpdate={(id, nota) => setInscriptos(prev => prev.map(x => x.id === id ? {...x, nota_baja: nota} : x))} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -330,6 +331,45 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
           onSave={() => { setModalConfirmar(null); cargar(); cargarInteresados() }}
         />
       )}
+    </div>
+  )
+}
+
+function NotaBaja({ inscripto, onUpdate }) {
+  const [editing, setEditing] = useState(false)
+  const [nota, setNota] = useState(inscripto.nota_baja || '')
+  const [saving, setSaving] = useState(false)
+
+  async function guardar() {
+    setSaving(true)
+    const { supabase } = await import('@/lib/supabase')
+    await supabase.from('inscriptos').update({ nota_baja: nota || null }).eq('id', inscripto.id)
+    onUpdate(inscripto.id, nota)
+    setSaving(false)
+    setEditing(false)
+  }
+
+  if (editing) return (
+    <div style={{display:'flex', gap:'6px', alignItems:'center'}}>
+      <input
+        value={nota}
+        onChange={e => setNota(e.target.value)}
+        style={{fontSize:'12px', padding:'4px 8px', background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:'5px', color:'var(--text)', outline:'none', flex:1}}
+        placeholder="Ej: Se devolvió 50%"
+        autoFocus
+        onKeyDown={e => e.key === 'Enter' && guardar()}
+      />
+      <button className="btn-ghost btn-sm" onClick={guardar} disabled={saving}>{saving ? '...' : '✓'}</button>
+      <button className="btn-ghost btn-sm btn-danger" onClick={() => { setNota(inscripto.nota_baja || ''); setEditing(false) }}>✕</button>
+    </div>
+  )
+
+  return (
+    <div style={{display:'flex', gap:'6px', alignItems:'center', cursor:'pointer'}} onClick={() => setEditing(true)}>
+      <span style={{fontSize:'12px', color: nota ? 'var(--text-2)' : 'var(--text-3)', fontStyle: nota ? 'normal' : 'italic'}}>
+        {nota || 'Agregar nota...'}
+      </span>
+      <span style={{fontSize:'10px', color:'var(--text-3)'}}>✎</span>
     </div>
   )
 }

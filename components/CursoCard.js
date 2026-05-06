@@ -76,7 +76,11 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOn
         {curso.productos_regalo && (
           <div style={{marginTop:'10px', padding:'8px 10px', background:'var(--surface2)', borderRadius:'6px', borderLeft:'2px solid var(--accent)'}}>
             <div style={{fontSize:'10px', fontWeight:500, textTransform:'uppercase', letterSpacing:'.05em', color:'var(--accent)', marginBottom:'3px'}}>🎁 Productos</div>
-            <div style={{fontSize:'12px', color:'var(--text-2)', lineHeight:1.4}}>{curso.productos_regalo}</div>
+            <div style={{fontSize:'12px', color:'var(--text-2)', lineHeight:1.6}}>
+              {curso.productos_regalo.split('\n').map((line, i) => (
+                <div key={i}>• {line.trim()}</div>
+              ))}
+            </div>
           </div>
         )}
       </div>
