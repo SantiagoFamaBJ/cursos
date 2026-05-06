@@ -102,12 +102,34 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
     a.click()
   }
 
-  const filtrados = [...inscriptos].filter(i =>
+  const soloActivos = inscriptos.filter(i => i.estado !== 'baja')
+  const bajas = inscriptos.filter(i => i.estado === 'baja')
+  function exportarPunteo() {
+    const lineas = soloActivos.map(i => {
+      const dni = i.dni ? ` | DNI ${i.dni}` : ''
+      return `• ${i.nombre}${dni}`
+    })
+    const texto = `${curso.nombre}\n${'-'.repeat(40)}\n${lineas.join('\n')}`
+    const blob = new Blob([texto], { type: 'text/plain;charset=utf-8;' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `${curso.nombre.replace(/\s+/g, '_')}_punteo.txt`
+    a.click()
+  }
+
+  const filtrados = [...soloActivos].filter(i =>
     i.nombre?.toLowerCase().includes(buscar.toLowerCase()) ||
     i.dni?.includes(buscar) ||
     i.email?.toLowerCase().includes(buscar.toLowerCase())
   ).sort((a, b) => {
     if (!sortCol) return 0
+    // Numeric sort for monto columns
+    if (sortCol.includes('monto') || sortCol === 'restante_usd') {
+      const va = Number(a[sortCol] || 0)
+      const vb = Number(b[sortCol] || 0)
+      return sortAsc ? va - vb : vb - va
+    }
+    // Boolean sort for checkbox columns
     const va = a[sortCol] ? 1 : 0
     const vb = b[sortCol] ? 1 : 0
     return sortAsc ? va - vb : vb - va
@@ -123,10 +145,11 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
         <div className="modal-header">
           <div>
             <h3>{curso.nombre}</h3>
-            <span className="modal-sub">{inscriptos.length} inscriptos{!readOnly && ` · ${interesados.length} interesados`}</span>
+            <span className="modal-sub">{inscriptos.filter(i=>i.estado!=='baja').length} inscriptos{!readOnly && ` · ${interesados.length} interesados · ${inscriptos.filter(i=>i.estado==='baja').length} bajas`}</span>
           </div>
           <div className="modal-header-actions">
             {vista === 'inscriptos' && !readOnly && <button className="btn-ghost" onClick={exportarCSV}>↓ CSV</button>}
+            {vista === 'inscriptos' && !readOnly && <button className="btn-ghost" onClick={exportarPunteo}>↓ Punteo</button>}
             {vista === 'inscriptos' && !readOnly && <button className="btn-primary" onClick={() => setModalInscripto('nuevo')}>+ Inscripto</button>}
             {vista === 'interesados' && <button className="btn-primary" onClick={() => setModalInteresado('nuevo')}>+ Interesado</button>}
             <button className="btn-close" onClick={onClose}>✕</button>
@@ -135,6 +158,7 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
         <div style={{padding:'0 26px', borderBottom:'1px solid var(--border)', display:'flex', gap:'4px', flexShrink:0}}>
           <button className={`tab ${vista === 'inscriptos' ? 'active' : ''}`} onClick={() => setVista('inscriptos')}>Inscriptos ({inscriptos.length})</button>
           {!readOnly && <button className={`tab ${vista === 'interesados' ? 'active' : ''}`} onClick={() => setVista('interesados')}>Interesados ({interesados.length})</button>}
+          <button className={`tab ${vista === 'bajas' ? 'active' : ''}`} style={{color: inscriptos.filter(i=>i.estado==='baja').length > 0 ? 'var(--danger)' : undefined}} onClick={() => setVista('bajas')}>Bajas ({inscriptos.filter(i=>i.estado==='baja').length})</button>
         </div>
 
         <div className="modal-search">
@@ -150,16 +174,17 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
             <table className="tabla">
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Participante</th>
-                  <th>1° Pago</th>
-                  <th>TC 1°</th>
-                  <th>2° Pago</th>
-                  <th>TC 2°</th>
-                  {hasPago3 && <th>3° Pago</th>}
-                  {hasPago3 && <th>TC 3°</th>}
+                  <th className="resizable">#</th>
+                  <th className="resizable">Participante</th>
+                  <th className="resizable" style={{cursor:'pointer',userSelect:'none'}} onClick={() => toggleSort('pago1_monto')}>1° Pago {sortCol==='pago1_monto'?(sortAsc?'↑':'↓'):<span style={{opacity:.3}}>↕</span>}</th>
+                  <th className="resizable">TC 1°</th>
+                  <th className="resizable" style={{cursor:'pointer',userSelect:'none'}} onClick={() => toggleSort('pago2_monto')}>2° Pago {sortCol==='pago2_monto'?(sortAsc?'↑':'↓'):<span style={{opacity:.3}}>↕</span>}</th>
+                  <th className="resizable">TC 2°</th>
+                  {hasPago3 && <th className="resizable" style={{cursor:'pointer',userSelect:'none'}} onClick={() => toggleSort('pago3_monto')}>3° Pago {sortCol==='pago3_monto'?(sortAsc?'↑':'↓'):<span style={{opacity:.3}}>↕</span>}</th>}
+                  {hasPago3 && <th className="resizable">TC 3°</th>}
+                  <th className="resizable" style={{cursor:'pointer',userSelect:'none',background:'rgba(232,97,26,.12)',color:'var(--accent)'}} onClick={() => toggleSort('restante_usd')}>Restante USD {sortCol==='restante_usd'?(sortAsc?'↑':'↓'):<span style={{opacity:.3}}>↕</span>}</th>
                   {visibleCols.map(c => (
-                    <th key={c.key} onClick={() => toggleSort(c.key)} style={{cursor:'pointer', userSelect:'none'}}>
+                    <th key={c.key} className="resizable" onClick={() => toggleSort(c.key)} style={{cursor:'pointer', userSelect:'none'}}>
                       {c.label} {sortCol === c.key ? (sortAsc ? '↑' : '↓') : <span style={{opacity:.3}}>↕</span>}
                     </th>
                   ))}
@@ -168,7 +193,7 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
               </thead>
               <tbody>
                 {filtrados.map((i, idx) => (
-                  <tr key={i.id} style={i.estado === 'baja' ? {opacity:.5, textDecoration:'line-through'} : {}}>
+                  <tr key={i.id}>
                     <td className="td-num">{idx + 1}</td>
                     <td>
                       <div className="td-nombre">{i.nombre}</div>
@@ -176,7 +201,6 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
                       <div className="td-dni">{i.celular ? <>📱 {i.celular}</> : <span className="td-falta">Falta celular</span>}</div>
                       <div className="td-email">{i.email || <span className="td-falta">Falta email</span>}</div>
                       {i.pago_unico && <span style={{fontSize:'10px',color:'var(--accent)',fontWeight:500}}>Pago único</span>}
-                      {i.estado === 'baja' && <span style={{fontSize:'10px',color:'var(--danger)',fontWeight:500}}>⚠ Baja</span>}
                       {(i.cantidad_pagos||2) === 3 && <span style={{fontSize:'10px',color:'var(--text-3)'}}>3 pagos</span>}
                     </td>
                     <td>
@@ -194,6 +218,7 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
                       {i.link_pago3 && <span className="badge-link">Link</span>}
                     </td>}
                     {hasPago3 && <td>{i.tc_pago3 ? `$${Number(i.tc_pago3).toLocaleString('es-AR')}` : '—'}</td>}
+                    <td style={{background:'rgba(232,97,26,.08)',fontWeight:500,color:i.restante_usd?'var(--accent)':'var(--text-3)'}}>{i.restante_usd ? `USD ${i.restante_usd}` : '—'}</td>
                     {visibleCols.map(c => (
                       <td key={c.key} className="td-check">
                         {readOnly ? (
@@ -218,6 +243,33 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
           )}
         </div>}
 
+        {vista === 'bajas' && (
+          <div className="table-wrap">
+            {bajas.length === 0 ? (
+              <div className="empty-state">No hay bajas.</div>
+            ) : (
+              <table className="tabla">
+                <thead>
+                  <tr><th className="resizable">#</th><th className="resizable">Participante</th><th>1° Pago (seña)</th><th>TC</th></tr>
+                </thead>
+                <tbody>
+                  {bajas.map((i, idx) => (
+                    <tr key={i.id}>
+                      <td className="td-num">{idx + 1}</td>
+                      <td>
+                        <div className="td-nombre">{i.nombre}</div>
+                        {i.dni && <div className="td-dni">DNI {i.dni}</div>}
+                      </td>
+                      <td>{fmt(i.pago1_monto, i.pago1_moneda, i.pago1_ars_equivalente)}</td>
+                      <td>{i.tc_pago1 ? `$${Number(i.tc_pago1).toLocaleString('es-AR')}` : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+
         {vista === 'interesados' && (
           <div className="table-wrap">
             {interesados.length === 0 ? (
@@ -226,12 +278,12 @@ export default function DetalleCurso({ curso, onClose, readOnly }) {
               <table className="tabla">
                 <thead>
                   <tr>
-                    <th>#</th><th>Nombre</th><th>DNI</th><th>Celular</th><th>Email</th><th></th>
+                    <th className="resizable">#</th><th>Nombre</th><th>DNI</th><th>Celular</th><th>Email</th><th></th>
                   </tr>
                 </thead>
                 <tbody>
                   {interesados.map((i, idx) => (
-                    <tr key={i.id} style={i.estado === 'baja' ? {opacity:.5, textDecoration:'line-through'} : {}}>
+                    <tr key={i.id}>
                       <td className="td-num">{idx + 1}</td>
                       <td><div className="td-nombre">{i.nombre}</div></td>
                       <td>{i.dni || '—'}</td>

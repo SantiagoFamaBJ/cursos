@@ -73,7 +73,12 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOn
           {curso.precio2_usd && <span className="badge badge-usd">USD {curso.precio2_usd}</span>}
           {curso.precio1_ars && <span className="badge badge-ars">$ {Number(curso.precio1_ars).toLocaleString('es-AR')}</span>}
         </div>
-      </div>
+      {curso.productos_regalo && (
+        <div style={{margin:'0 20px 14px', padding:'8px 12px', background:'var(--surface2)', borderRadius:'6px', borderLeft:'2px solid var(--accent)'}}>
+          <div style={{fontSize:'10px', fontWeight:500, textTransform:'uppercase', letterSpacing:'.05em', color:'var(--accent)', marginBottom:'3px'}}>🎁 Productos</div>
+          <div style={{fontSize:'12px', color:'var(--text-2)', lineHeight:1.4}}>{curso.productos_regalo}</div>
+        </div>
+      )}
 
       <div className="card-bottom">
         <div className="card-progress-row">

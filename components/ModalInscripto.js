@@ -13,6 +13,7 @@ const empty = {
   factura_pago1: false, factura_pago2: false, factura_pago3: false,
   pago_unico: false,
   estado: 'activo',
+  restante_usd: '',
 }
 
 export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) {
@@ -36,6 +37,7 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
     link_pago3: inscripto.link_pago3 ?? false,
     pago_unico: inscripto.pago_unico ?? false,
     estado: inscripto.estado || 'activo',
+    restante_usd: inscripto.restante_usd ?? '',
   } : { ...empty }
 
   const [form, setForm] = useState(init)
@@ -57,6 +59,7 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
       cantidad_pagos: cantPagos,
       pago_unico: !!form.pago_unico,
       estado: form.estado || 'activo',
+      restante_usd: num(form.restante_usd),
       pago1_monto: num(form.pago1_monto),
       pago1_moneda: form.pago1_monto ? form.pago1_moneda : null,
       pago1_ars_equivalente: form.pago1_moneda === 'USD' ? num(form.pago1_ars_equivalente) : null,
@@ -142,6 +145,11 @@ export default function ModalInscripto({ cursoId, inscripto, onClose, onSave }) 
               </button>
             ))}
           </div>
+
+          <label className="field">
+            <span>Restante USD</span>
+            <input type="text" inputMode="decimal" value={form.restante_usd} onChange={e => set('restante_usd', e.target.value)} placeholder="0" />
+          </label>
 
           <div className="section-label">1° Pago</div>
           <PagoFields

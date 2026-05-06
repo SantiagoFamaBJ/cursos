@@ -18,7 +18,7 @@ export default function Control() {
 
       const { data: inscData } = await supabase
         .from('inscriptos')
-        .select('nombre, curso_id, confirmado_adm_pago1, factura_pago1, link_pago1, cantidad_pagos, pago_unico')
+        .select('nombre, curso_id, confirmado_adm_pago1, factura_pago1, link_pago1, cantidad_pagos, pago_unico, pago1_monto, estado')
         .in('curso_id', cursosData.map(c => c.id))
 
       const resultado = cursosData.map(c => ({
@@ -26,6 +26,9 @@ export default function Control() {
         pendientes: (inscData || [])
           .filter(i => {
             if (i.curso_id !== c.id) return false
+            if (i.estado === 'baja') return false
+            // Solo si pagó algo el 1° pago
+            if (!i.pago1_monto) return false
             // Falta conf ADM 1° O factura 1°
             return !i.confirmado_adm_pago1 || !i.factura_pago1
           })

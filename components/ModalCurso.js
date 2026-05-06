@@ -14,6 +14,7 @@ export default function ModalCurso({ curso, onClose, onSave }) {
     precio2_usd: curso?.precio2_usd || '',
     precio1_ars: curso?.precio1_ars || '',
     codigo_dictante: curso?.codigo_dictante || '',
+    productos_regalo: curso?.productos_regalo || '',
   })
   const [saving, setSaving] = useState(false)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
@@ -31,6 +32,7 @@ export default function ModalCurso({ curso, onClose, onSave }) {
       precio2_usd: form.precio2_usd || null,
       precio1_ars: form.precio1_ars || null,
       codigo_dictante: form.codigo_dictante.trim() || null,
+      productos_regalo: form.productos_regalo.trim() || null,
     }
     if (curso) {
       await supabase.from('cursos').update(payload).eq('id', curso.id)
@@ -93,6 +95,18 @@ export default function ModalCurso({ curso, onClose, onSave }) {
           <label className="field">
             <span>Código dictante</span>
             <input value={form.codigo_dictante} onChange={e => set('codigo_dictante', e.target.value)} placeholder="ej: sifontes2026" />
+          </label>
+
+          <div className="section-label">Productos de regalo</div>
+          <label className="field">
+            <span>Detalle de productos</span>
+            <textarea
+              value={form.productos_regalo}
+              onChange={e => set('productos_regalo', e.target.value)}
+              placeholder="Ej: Kit de composite, guantes, mascarillas..."
+              rows={3}
+              style={{resize:'vertical', fontFamily:'inherit', fontSize:'14px', padding:'9px 11px', background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:'7px', color:'var(--text)', outline:'none'}}
+            />
           </label>
 
         <div className="modal-footer">
