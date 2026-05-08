@@ -31,8 +31,7 @@ export default function CursoCard({ curso, onAbrir, onEditar, onEliminar, readOn
   }
 
   function formatMonto(n) {
-    if (n >= 1000000) return `$${(n/1000000).toFixed(2).replace('.', ',')}M`
-    return `$${Math.round(n/1000)}k`
+    return `$${Math.round(n).toLocaleString('es-AR')}`
   }
 
   function calcFinanciero() {

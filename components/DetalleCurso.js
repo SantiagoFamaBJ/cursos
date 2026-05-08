@@ -118,6 +118,20 @@ export default function DetalleCurso({ curso, onClose, readOnly, hideBajas }) {
     a.click()
   }
 
+  function exportarListaLocal() {
+    const lineas = soloActivos
+      .filter(i => i.celular)
+      .map(i => `${i.nombre} | ${i.celular}`)
+    const sinCelular = soloActivos.filter(i => !i.celular).map(i => `${i.nombre} | (sin celular)`)
+    const todas = [...lineas, ...sinCelular]
+    const texto = `Lista local — ${curso.nombre}\n${'-'.repeat(40)}\n${todas.join('\n')}`
+    const blob = new Blob([texto], { type: 'text/plain;charset=utf-8;' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `${curso.nombre.replace(/\s+/g, '_')}_lista_local.txt`
+    a.click()
+  }
+
   const filtrados = [...soloActivos].filter(i =>
     i.nombre?.toLowerCase().includes(buscar.toLowerCase()) ||
     i.dni?.includes(buscar) ||
@@ -151,6 +165,7 @@ export default function DetalleCurso({ curso, onClose, readOnly, hideBajas }) {
           <div className="modal-header-actions">
             {vista === 'inscriptos' && !readOnly && <button className="btn-ghost" onClick={exportarCSV}>↓ CSV</button>}
             {vista === 'inscriptos' && !readOnly && <button className="btn-ghost" onClick={exportarPunteo}>↓ Punteo</button>}
+            {vista === 'inscriptos' && !readOnly && <button className="btn-ghost" onClick={exportarListaLocal}>↓ Lista local</button>}
             {vista === 'inscriptos' && !readOnly && <button className="btn-primary" onClick={() => setModalInscripto('nuevo')}>+ Inscripto</button>}
             {vista === 'interesados' && <button className="btn-primary" onClick={() => setModalInteresado('nuevo')}>+ Interesado</button>}
             <button className="btn-close" onClick={onClose}>✕</button>
