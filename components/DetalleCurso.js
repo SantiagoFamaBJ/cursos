@@ -290,6 +290,14 @@ export default function DetalleCurso({ curso, onClose, readOnly, hideBajas }) {
                       </td>
                       <td>{fmt(i.pago1_monto, i.pago1_moneda, i.pago1_ars_equivalente)}</td>
                       <td>{i.tc_pago1 ? `$${Number(i.tc_pago1).toLocaleString('es-AR')}` : '—'}</td>
+                      <td className="td-check">
+                        <input
+                          type="checkbox"
+                          checked={i.sumar_al_recaudado !== false}
+                          onChange={() => toggleCheck(i.id, 'sumar_al_recaudado', i.sumar_al_recaudado !== false)}
+                          className="check"
+                        />
+                      </td>
                       <td><NotaBaja inscripto={i} onUpdate={(id, nota) => setInscriptos(prev => prev.map(x => x.id === id ? {...x, nota_baja: nota} : x))} /></td>
                     </tr>
                   ))}
