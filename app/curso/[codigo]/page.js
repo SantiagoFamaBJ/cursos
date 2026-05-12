@@ -85,45 +85,45 @@ export default function CursoDictante({ params }) {
           )}
         </div>
 
-        <div style={{marginBottom:'16px', display:'flex', alignItems:'center', justifyContent:'space-between'}}>
-          <span style={{color:'var(--text-3)', fontSize:'13px'}}>{filtrados.length} inscripto{filtrados.length !== 1 ? 's' : ''}</span>
-        </div>
-
-        <input
-          placeholder="Buscar por nombre o DNI..."
-          value={buscar}
-          onChange={e => setBuscar(e.target.value)}
-          className="search-input"
-          style={{marginBottom:'16px'}}
-        />
-
-        <div style={{borderRadius:'10px', border:'1px solid var(--border)', overflow:'hidden'}}>
-          <table className="tabla" style={{width:'100%'}}>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Nombre</th>
-                <th>DNI</th>
-                <th>Celular</th>
-                <th>Email</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtrados.length === 0 ? (
-                <tr><td colSpan="4" style={{textAlign:'center', padding:'32px', color:'var(--text-3)'}}>No hay inscriptos.</td></tr>
-              ) : (
-                filtrados.map((i, idx) => (
-                  <tr key={idx}>
-                    <td className="td-num">{idx + 1}</td>
-                    <td><div className="td-nombre">{i.nombre}</div></td>
-                    <td>{i.dni || '—'}</td>
-                    <td>{i.celular || '—'}</td>
-                    <td>{i.email || '—'}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <div style={{marginBottom:'16px'}}>
+          <h2 style={{fontFamily:"Fraunces, serif", fontSize:"18px", fontWeight:"400", color:"var(--text)", marginBottom:"12px"}}>
+            Inscriptos <span style={{fontSize:"14px", color:"var(--text-3)", fontFamily:"'DM Sans', sans-serif"}}>({filtrados.length})</span>
+          </h2>
+          <input
+            placeholder="Buscar por nombre o DNI..."
+            value={buscar}
+            onChange={e => setBuscar(e.target.value)}
+            className="search-input"
+            style={{marginBottom:'12px'}}
+          />
+          <div style={{borderRadius:'10px', border:'1px solid var(--border)', overflowX:'auto'}}>
+            <table className="tabla" style={{width:'100%', minWidth:'500px'}}>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nombre</th>
+                  <th>DNI</th>
+                  <th>Celular</th>
+                  <th>Email</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtrados.length === 0 ? (
+                  <tr><td colSpan="5" style={{textAlign:'center', padding:'32px', color:'var(--text-3)'}}>No hay inscriptos.</td></tr>
+                ) : (
+                  filtrados.map((i, idx) => (
+                    <tr key={idx}>
+                      <td className="td-num">{idx + 1}</td>
+                      <td><div className="td-nombre">{i.nombre}</div></td>
+                      <td>{i.dni || '—'}</td>
+                      <td>{i.celular || '—'}</td>
+                      <td>{i.email || '—'}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {(
@@ -131,8 +131,8 @@ export default function CursoDictante({ params }) {
             <h2 style={{fontFamily:"Fraunces, serif", fontSize:"18px", fontWeight:"400", color:"var(--text)", marginBottom:"16px"}}>
               Interesados <span style={{fontSize:"14px", color:"var(--text-3)", fontFamily:"'DM Sans', sans-serif"}}>({interesados.length})</span>
             </h2>
-            <div style={{borderRadius:'10px', border:'1px solid var(--border)', overflow:'hidden'}}>
-              <table className="tabla" style={{width:'100%'}}>
+            <div style={{borderRadius:'10px', border:'1px solid var(--border)', overflowX:'auto'}}>
+              <table className="tabla" style={{width:'100%', minWidth:'500px'}}>
                 <thead>
                   <tr>
                     <th>#</th>
