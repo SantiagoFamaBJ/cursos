@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-const ADMIN_PASSWORD = 'dmt123'
 const PANEL_PATH = process.env.NEXT_PUBLIC_SECRET_PANEL_PATH
 
 export default function Login() {
@@ -11,10 +10,14 @@ export default function Login() {
   const [error, setError] = useState(false)
   const router = useRouter()
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    if (password === ADMIN_PASSWORD) {
-      document.cookie = `admin_auth=${ADMIN_PASSWORD}; max-age=${60*60*24*365}; path=/`
+    const res = await fetch('/api/admin-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    })
+    if (res.ok) {
       router.push(`/panel/${PANEL_PATH}`)
     } else {
       setError(true)

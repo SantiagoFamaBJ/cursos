@@ -1,14 +1,18 @@
 import { NextResponse } from 'next/server'
+import { adminToken } from './lib/adminToken'
 
-const ADMIN_PASSWORD = 'dmt123'
-
-export function middleware(request) {
+export async function middleware(request) {
   const { pathname } = request.nextUrl
-  const auth = request.cookies.get('admin_auth')?.value
+
+  // Rutas viejas → ruta oficial del admin
+  if (pathname === '/admin' || pathname === '/login') {
+    return NextResponse.redirect(new URL('/ADMIN', request.url))
+  }
 
   if (pathname.startsWith('/panel')) {
-    if (auth !== ADMIN_PASSWORD) {
-      return NextResponse.redirect(new URL('/login', request.url))
+    const auth = request.cookies.get('admin_auth')?.value
+    if (auth !== (await adminToken())) {
+      return NextResponse.redirect(new URL('/ADMIN', request.url))
     }
   }
 
@@ -16,5 +20,5 @@ export function middleware(request) {
 }
 
 export const config = {
-  matcher: ['/panel/:path*']
+  matcher: ['/panel/:path*', '/admin', '/login']
 }
