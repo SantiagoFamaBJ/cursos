@@ -1,23 +1,18 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
-import { notFound } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import CursoCard from '@/components/CursoCard'
 import Control from '@/components/Control'
 import DetalleCurso from '@/components/DetalleCurso'
 
-const SECRET = process.env.NEXT_PUBLIC_LOCAL_PATH
-
-export default function Local({ params }) {
-  const { secret } = use(params)
+// El link secreto lo valida middleware.js en el servidor
+export default function Local() {
   const [tab, setTab] = useState('cursos')
   const [cursos, setCursos] = useState([])
   const [loading, setLoading] = useState(true)
   const [cursoAbierto, setCursoAbierto] = useState(null)
   const [filtroDictante, setFiltroDictante] = useState('')
-
-  if (secret !== SECRET) return notFound()
 
   useEffect(() => { cargarCursos() }, [])
 

@@ -40,10 +40,10 @@ Editá `.env.local` con tus valores reales:
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1N...
-NEXT_PUBLIC_SECRET_PANEL_PATH=a8f3k2x9
+SECRET_PANEL_PATH=un-codigo-largo-al-azar
 ```
 
-> **Importante**: cambiá `a8f3k2x9` por cualquier código secreto que quieras. 
+> **Importante**: cambiá el valor por un código secreto largo que quieras. 
 > Ese código va a ser parte de la URL: `tuapp.vercel.app/panel/TU_CODIGO`
 > Podés generar uno en: https://www.random.org/strings/
 
@@ -72,10 +72,13 @@ git push -u origin main
 
 1. Entrá a [vercel.com](https://vercel.com) → **Add New Project**
 2. Importá el repositorio de GitHub
-3. En **Environment Variables** agregá las tres variables:
+3. En **Environment Variables** agregá las variables:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `NEXT_PUBLIC_SECRET_PANEL_PATH`
+   - `SECRET_PANEL_PATH` (ruta secreta del panel)
+   - `LOCAL_PATH` (ruta secreta de la vista local)
+   - `DM_ADMIN_PASSWORD` (contraseña del panel)
+   - `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Settings → API Keys → service_role; nunca con prefijo NEXT_PUBLIC_)
 4. Click **Deploy** — listo
 
 Cada vez que hagas `git push`, Vercel redeploya automáticamente.

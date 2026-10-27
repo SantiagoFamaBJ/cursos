@@ -3,8 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-const PANEL_PATH = process.env.NEXT_PUBLIC_SECRET_PANEL_PATH
-
 export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState(false)
@@ -18,7 +16,8 @@ export default function Login() {
       body: JSON.stringify({ password }),
     })
     if (res.ok) {
-      router.push(`/panel/${PANEL_PATH}`)
+      const { panel } = await res.json().catch(() => ({}))
+      router.push(`/panel/${encodeURIComponent(panel || 'panel')}`)
     } else {
       setError(true)
       setPassword('')

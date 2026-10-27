@@ -1,7 +1,6 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
-import { notFound } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import CursoCard from '@/components/CursoCard'
 import ModalCurso from '@/components/ModalCurso'
@@ -10,18 +9,14 @@ import TodosInscriptos from '@/components/TodosInscriptos'
 import Ranking from '@/components/Ranking'
 import Control from '@/components/Control'
 
-const SECRET = process.env.NEXT_PUBLIC_SECRET_PANEL_PATH
-
-export default function Panel({ params }) {
-  const { secret } = use(params)
+// El acceso (sesión + ruta secreta) lo valida middleware.js en el servidor
+export default function Panel() {
   const [tab, setTab] = useState('cursos')
   const [cursos, setCursos] = useState([])
   const [loading, setLoading] = useState(true)
   const [modalCurso, setModalCurso] = useState(null)
   const [cursoAbierto, setCursoAbierto] = useState(null)
   const [filtroDictante, setFiltroDictante] = useState('')
-
-  if (secret !== SECRET) return notFound()
 
   useEffect(() => { cargarCursos() }, [])
 
@@ -80,7 +75,7 @@ export default function Panel({ params }) {
           </div>
           <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
             <a
-              href={`/local/${process.env.NEXT_PUBLIC_LOCAL_PATH}`}
+              href="/api/local-link"
               target="_blank"
               style={{fontSize:'13px', color:'var(--text-3)', textDecoration:'none', borderBottom:'1px solid var(--border)'}}
             >

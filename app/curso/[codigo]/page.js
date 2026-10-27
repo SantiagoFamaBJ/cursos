@@ -2,7 +2,6 @@
 
 import { use, useEffect, useState } from 'react'
 import { notFound } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
 
 export default function CursoDictante({ params }) {
   const { codigo } = use(params)
@@ -15,29 +14,13 @@ export default function CursoDictante({ params }) {
 
   useEffect(() => {
     async function cargar() {
-      const { data: cursos } = await supabase
-        .from('cursos')
-        .select('*')
-        .eq('codigo_dictante', codigo)
-        .single()
+      const res = await fetch(`/api/curso/${encodeURIComponent(codigo)}`, { cache: 'no-store' })
+      const json = await res.json().catch(() => ({}))
 
-      if (!cursos) { setLoading(false); return }
-      setCurso(cursos)
-
-      const { data: insc } = await supabase
-        .from('inscriptos')
-        .select('nombre, dni, email, celular')
-        .eq('curso_id', cursos.id)
-        .order('nombre', { ascending: true })
-
-      const { data: inter } = await supabase
-        .from('interesados')
-        .select('nombre, dni, email, celular')
-        .eq('curso_id', cursos.id)
-        .order('nombre', { ascending: true })
-
-      setInscriptos(insc || [])
-      setInteresados(inter || [])
+      if (!json.curso) { setLoading(false); return }
+      setCurso(json.curso)
+      setInscriptos(json.inscriptos || [])
+      setInteresados(json.interesados || [])
       setLoading(false)
     }
     cargar()

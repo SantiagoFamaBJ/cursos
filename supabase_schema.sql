@@ -41,6 +41,6 @@ create table inscriptos (
   creado_en timestamptz default now()
 );
 
--- Deshabilitar RLS (acceso por link secreto, sin auth)
+-- RLS: ver supabase/cerrar_tablas.sql (el panel accede por /api/db con la clave de servicio)
 alter table cursos disable row level security;
 alter table inscriptos disable row level security;
