@@ -37,7 +37,13 @@ export async function POST(req) {
   if ((action === 'update' || action === 'delete') && filters.length === 0) return error('Falta filtro', 400)
   if ((action === 'insert' || action === 'update') && (!values || typeof values !== 'object')) return error('Faltan datos', 400)
 
-  const db = supabaseAdmin()
+  let db
+  try {
+    db = supabaseAdmin()
+  } catch (e) {
+    console.error('[api/db] config:', e.message)
+    return error('Falta configuración del servidor', 500)
+  }
   let q = db.from(table)
   if (action === 'select') q = q.select(columns)
   if (action === 'insert') q = q.insert(values)
@@ -48,5 +54,6 @@ export async function POST(req) {
   if (single) q = q.single()
 
   const { data, error: err } = await q
+  if (err) console.error('[api/db]', table, action, err.message)
   return NextResponse.json({ data: data ?? null, error: err ? { message: err.message } : null })
 }
